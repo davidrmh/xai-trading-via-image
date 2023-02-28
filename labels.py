@@ -2,9 +2,9 @@ import pandas as pd
 from ta.volatility import BollingerBands
 from ta.trend import MACD
 from ta.momentum import RSIIndicator
-from typing import Union, Optional
 
-def bollinger_buy(data: pd.DataFrame, window: int) -> pd.DataFrame:
+
+def bollinger_buy_(data: pd.DataFrame, window: int) -> pd.DataFrame:
     nobs = data.shape[0]
     signal = [0.0] * nobs
     for t in range(window - 1, nobs):
@@ -13,7 +13,7 @@ def bollinger_buy(data: pd.DataFrame, window: int) -> pd.DataFrame:
     data['BB_Buy'] = signal
     return data
 
-def bollinger_sell(data: pd.DataFrame, window: int) -> pd.DataFrame:
+def bollinger_sell_(data: pd.DataFrame, window: int) -> pd.DataFrame:
     nobs = data.shape[0]
     signal = [0.0] * nobs
     for t in range(window - 1, nobs):
@@ -22,7 +22,7 @@ def bollinger_sell(data: pd.DataFrame, window: int) -> pd.DataFrame:
     data['BB_Sell'] = signal
     return data
     
-def bollinger_signals(data: pd.DataFrame, window: int = 20, n_std: int = 2) -> pd.DataFrame:
+def bollinger_signals_(data: pd.DataFrame, window: int = 20, n_std: int = 2) -> pd.DataFrame:
     # Compute Bollinger bands
     bollinger = BollingerBands(data['Adj Close'], window, n_std)
     low_band = bollinger.bollinger_lband()
@@ -33,7 +33,7 @@ def bollinger_signals(data: pd.DataFrame, window: int = 20, n_std: int = 2) -> p
     data = bollinger_sell(data, window)
     return data
 
-def macd_buy(data: pd.DataFrame, w_slow, w_sig) -> pd.DataFrame:
+def macd_buy_(data: pd.DataFrame, w_slow, w_sig) -> pd.DataFrame:
     nobs = data.shape[0]
     signal = [0.0] * nobs
     for t in range(w_sig + w_slow - 1, nobs):
@@ -42,7 +42,7 @@ def macd_buy(data: pd.DataFrame, w_slow, w_sig) -> pd.DataFrame:
     data['MACD_Buy'] = signal
     return data
 
-def macd_sell(data: pd.DataFrame, w_slow, w_sig) -> pd.DataFrame:
+def macd_sell_(data: pd.DataFrame, w_slow, w_sig) -> pd.DataFrame:
     nobs = data.shape[0]
     signal = [0.0] * nobs
     for t in range(w_sig + w_slow - 1, nobs):
@@ -51,7 +51,7 @@ def macd_sell(data: pd.DataFrame, w_slow, w_sig) -> pd.DataFrame:
     data['MACD_Sell'] = signal
     return data
 
-def macd_signals(data: pd.DataFrame, w_slow: int = 26, w_fast: int = 12, w_sig: int = 9) -> pd.DataFrame:
+def macd_signals_(data: pd.DataFrame, w_slow: int = 26, w_fast: int = 12, w_sig: int = 9) -> pd.DataFrame:
     macd = MACD(data['Adj Close'], window_slow = w_slow, window_fast = w_fast, window_sign = w_sig)
     data['MACD'] = macd.macd()
     data['MACD_Sig'] = macd.macd_signal()
