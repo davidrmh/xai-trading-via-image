@@ -1,0 +1,7 @@
+{
+    "path_files": "./data_2010_2017",
+    "bollinger": {"window": 20, "n_std": 2},
+    "macd": {"w_slow": 26, "w_fast": 12, "w_sig": 9},
+    "rsi": {"window": 14, "uplev": 70, "dowlev": 30},
+    "out_dir": "./labels_2010_2017"
+}
