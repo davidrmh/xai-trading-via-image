@@ -19,9 +19,13 @@ parser.add_argument('-e', '--end',
 parser.add_argument('-o', '--out', 
                     help = 'String with the path of the directory to store the files', 
                     type = str)
+
+parser.add_argument('-m', '--min',
+                  help = 'Minumum number of observations to keep the file',
+                  type = int)
 args = parser.parse_args()
 
-def main(symbols: pd.DataFrame, str_start_date: str, str_end_date: str, outdir: str):
+def main(symbols: pd.DataFrame, str_start_date: str, str_end_date: str, outdir: str, minobs: int):
     
     t_start_date = datetime.strptime(str_start_date, '%m-%d-%Y')
     t_end_date = datetime.strptime(str_end_date, '%m-%d-%Y')
@@ -37,8 +41,9 @@ def main(symbols: pd.DataFrame, str_start_date: str, str_end_date: str, outdir: 
         query = f'https://query1.finance.yahoo.com/v7/finance/download/{s}?period1={period1}&period2={period2}&interval=1d&events=history&includeAdjustedClose=true'
         try:
             data = pd.read_csv(query)
-            file_path = os.path.join(outdir,f'{s}_{data.iloc[0,0]}_{data.iloc[-1,0]}.csv')
-            data.to_csv(file_path, index = False)
+            if data.shape[0] >= minobs:
+                file_path = os.path.join(outdir,f'{s}_{data.iloc[0,0]}_{data.iloc[-1,0]}.csv')
+                data.to_csv(file_path, index = False)
         except:
             print(f'Error for {s}')
             fail.append(s)
@@ -53,7 +58,8 @@ if __name__ == '__main__':
     str_start_date = args.start if args.start else '01-01-2010'
     str_end_date = args.end if args.end else '12-31-2018'
     outdir = args.out if args.out else './'
+    minobs = args.min if args.min else 1
     if not os.path.exists(outdir):
         os.mkdir(outdir)
-    main(symbols, str_start_date, str_end_date, outdir)
+    main(symbols, str_start_date, str_end_date, outdir, minobs)
     print(f' ===== Data Downloaded ===== \n')
