@@ -7,7 +7,7 @@ from ta.momentum import RSIIndicator
 def bollinger_buy_(data: pd.DataFrame, window: int) -> pd.DataFrame:
     nobs = data.shape[0]
     signal = [0.0] * nobs
-    for t in range(window - 1, nobs):
+    for t in range(window, nobs):
         if (data['Adj Close'].iloc[t - 1] < data['Low_Band'].iloc[t - 1]) and (data['Adj Close'].iloc[t] > data['Low_Band'].iloc[t]):
             signal[t] = 1.0
     data['BB_Buy'] = signal
@@ -16,7 +16,7 @@ def bollinger_buy_(data: pd.DataFrame, window: int) -> pd.DataFrame:
 def bollinger_sell_(data: pd.DataFrame, window: int) -> pd.DataFrame:
     nobs = data.shape[0]
     signal = [0.0] * nobs
-    for t in range(window - 1, nobs):
+    for t in range(window, nobs):
         if (data['Adj Close'].iloc[t - 1] > data['Up_Band'].iloc[t - 1]) and (data['Adj Close'].iloc[t] < data['Up_Band'].iloc[t]):
             signal[t] = 1.0
     data['BB_Sell'] = signal
