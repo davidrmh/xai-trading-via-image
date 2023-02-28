@@ -58,4 +58,29 @@ def macd_signals_(data: pd.DataFrame, w_slow: int = 26, w_fast: int = 12, w_sig:
     data = macd_buy(data, w_slow, w_sig)
     data = macd_sell(data, w_slow, w_sig)
     return data
+
+def rsi_buy_(data: pd.DataFrame, window: int, dowlev: int) -> None:
+    nobs = data.shape[0]
+    signal = [0.0] * nobs
+    for t in range(window, nobs):
+        if (data['RSI'].iloc[t] > dowlev) and (data['RSI'].iloc[t - 1] < dowlev):
+            signal[t] = 1.0
+    data['RSI_Buy'] = signal
+
+def rsi_sell_(data: pd.DataFrame, window: int, uplev: int) -> None:
+    nobs = data.shape[0]
+    signal = [0.0] * nobs
+    for t in range(window, nobs):
+        if (data['RSI'].iloc[t] < uplev) and (data['RSI'].iloc[t - 1] > uplev):
+            signal[t] = 1.0
+    data['RSI_Sell'] = signal
+
+def rsi_signals_(data: pd.DataFrame, window: int = 14, uplev: int = 70, dowlev: int = 30) -> None:
+    rsi = RSIIndicator(data['Adj Close'], window = window)
+    data['RSI'] = rsi.rsi()
+    rsi_buy_(data, window, dowlev)
+    rsi_sell_(data, window, uplev)
+    
+    
+    
     
