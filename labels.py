@@ -2,7 +2,16 @@ import pandas as pd
 from ta.volatility import BollingerBands
 from ta.trend import MACD
 from ta.momentum import RSIIndicator
+import json
+import argparse
+import os
 
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-f', '--file',
+                   help = 'Path of the json file containing the configuration of each indicator',
+                   type = str)
+args = parser.parse_args()
 
 def bollinger_buy_(data: pd.DataFrame, window: int) -> None:
     nobs = data.shape[0]
@@ -74,7 +83,48 @@ def rsi_signals_(data: pd.DataFrame, window: int = 14, uplev: int = 70, dowlev: 
     data['RSI'] = rsi.rsi()
     rsi_buy_(data, window, dowlev)
     rsi_sell_(data, window, uplev)
+
+def main(config: dict) -> None:
+    path_files = config['path_files']
+    files = os.listdir(path_files)
+    n_files = len(files)
+    out_dir = config['out_dir']
     
+    # Parameters for Bollinger bands
+    bol_w = config['bollinger']['window']
+    bol_std = config['bollinger']['n_std']
     
+    # Parameters for MACD
+    w_slow = config['macd']['w_slow']
+    w_fast = config['macd']['w_fast']
+    w_sig = config['macd']['w_sig']
     
+    # Parameters for RSI
+    rsi_w = config['rsi']['window']
+    uplev = config['rsi']['uplev']
+    dowlev = config['rsi']['dowlev']
     
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
+    count = 0
+    for f in files:
+        # Read file
+        data = pd.read_csv(os.path.join(path_files, f))
+        
+        # Label according to technical indicators
+        bollinger_signals_(data, bol_w, bol_std)
+        macd_signals_(data, w_slow, w_fast, w_sig)
+        rsi_signals_(data, rsi_w, uplev, dowlev)
+        
+        # Save labelled data
+        data.to_csv(os.path.join(out_dir, f), index = False)
+        count = count + 1
+        
+        print(f' === File {f} labelled === \n')
+        print(f' === {n_files - count} remaining files === \n')
+
+if __name__ == '__main__':
+    with open(args.file, 'r') as f:
+        config = json.load(f)
+    main(config)
+    print(' === Files Labelled === \n')
