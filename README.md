@@ -1,9 +1,10 @@
- **Title:** Explaining Trading Via Image Classification.
- The focus of the paper is on explainability and not profitability (probably).
+# Explaining Trading Via Image Classification
 
- This is the paper extending / using the results from Gideon thesis.
+The focus of the paper is on explainability and not profitability (probably).
 
- **Research questions**:
+This is the paper extending / using the results from Gideon thesis.
+
+**Research questions**:
 
 * Given that it is possible to learn complex arithmetic rules (decisions from technical indicators) using a visual representation of the data, can we visually explain the decisions behind these patterns?
 
