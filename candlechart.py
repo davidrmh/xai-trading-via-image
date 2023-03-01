@@ -136,6 +136,19 @@ def main(config: dict, triggers: list) -> None:
             # Indices where a decision is not triggered
             idx_no = data.index.difference(idx)
             
+            # To always have an image for the negative class
+            # we force to pick indices such that there is enough
+            # data to create an image using the specified
+            # window size.
+            # This might create problems in the remote case
+            # when there are less indices than samp_size
+            # but this is virtually impossible (I hope so)
+            idx_no = idx_no[idx_no > w]
+            
+            if len(idx_no) < samp_size:
+                print(f' ===== Not enough Negative {trig} signals for {f} and sample size {samp_size} ===== \n')
+                continue             
+            
             # Sample samp_size indices. No replacement
             idx_samp = np.random.choice(idx, size = samp_size, replace = False)
             idx_samp_no = np.random.choice(idx_no, size = samp_size, replace = False)
