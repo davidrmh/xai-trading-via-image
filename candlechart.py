@@ -42,6 +42,7 @@ def save_candle_chart(data: pd.DataFrame,
     `fig_width`: Float. Width of figure in inches
     `fig_height`: Float. Height of figure in inches
     `bg_color`: String. Background color
+    `dpi`: Flat. DPI resolution
     :return: None
     '''
     up = data[data['Close'] > data['Open']]
@@ -53,6 +54,7 @@ def save_candle_chart(data: pd.DataFrame,
     fig_width = dict_chart['fig_width'] if 'fig_width' in dict_chart else 0.72916  # Equivalent to 70 pixels 
     fig_height = dict_chart['fig_height'] if 'fig_width' in dict_chart else 0.72916
     bg_color = dict_chart['bg_color'] if 'bg_color' in dict_chart else 'black'
+    dpi = dict_chart['dpi'] if 'dpi' in dict_chart else 'figure'
     plt.ioff()
     plt.figure(figsize = (fig_width, fig_height))
     ax = plt.axes()
@@ -77,7 +79,7 @@ def save_candle_chart(data: pd.DataFrame,
     if not os.path.exists(filepath):
         os.mkdir(filepath)
     plt.savefig(os.path.join(filepath, f'{filename}.png'), 
-                dpi=300, backend = 'Agg',
+                dpi = dpi, backend = 'Agg',
                facecolor = bg_color)
     plt.close()
     plt.ion()
