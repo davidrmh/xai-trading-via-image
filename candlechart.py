@@ -155,10 +155,9 @@ def main(config: dict, triggers: list) -> None:
                 save_candle_chart(data_img, file_name, file_path, dict_chart)
 
 if __name__ == '__main__':
-    #triggers = ['BB_Buy', 'BB_Sell',
-    #            'MACD_Buy', 'MACD_Sell',
-    #           'RSI_Buy', 'RSI_Sell']
-    triggers = ['BB_Buy']
+    triggers = ['BB_Buy', 'BB_Sell',
+                'MACD_Buy', 'MACD_Sell',
+               'RSI_Buy', 'RSI_Sell']
     with open(args.file, 'r') as f:
         config = json.load(f)
     main(config, triggers)
