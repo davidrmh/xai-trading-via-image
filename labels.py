@@ -111,6 +111,18 @@ def main(config: dict) -> None:
         # Read file
         data = pd.read_csv(os.path.join(path_files, f))
         
+        # Drop rows where Volume is zero
+        data.drop(data[data['Volume'] == 0].index, inplace = True)
+        data.reset_index(drop = True, inplace = True)
+        
+        # Drop observations where the price did not move
+        data.drop(data[data['Low'] == data['High']].index, inplace = True)
+        data.reset_index(drop = True, inplace = True)
+        
+        # Only label if there's enough data
+        if data.shape[0] < max(bol_w, w_slow, rsi_w):
+            continue
+        
         # Label according to technical indicators
         bollinger_signals_(data, bol_w, bol_std)
         macd_signals_(data, w_slow, w_fast, w_sig)
