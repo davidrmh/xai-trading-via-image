@@ -2,6 +2,11 @@
 This file contains all the functions used to create the candle charts images for training the models.
 It is assumed that the data uses Yahoo Finance CSV structure (as of 22nd January 2023) and is stored
 in pandas dataframe with column `Date` used as index.
+
+Since matplotlib uses inches to specify figure size. If we want the output image
+to be an array with shape (H, W, C) and we are saving using a DPI value of D,
+then the width of the figure is equal to  W / D. Similarly, the height of the
+figure must be equal to H / D.
 '''
 import os
 import pandas as pd
@@ -39,10 +44,10 @@ def save_candle_chart(data: pd.DataFrame,
     `color_down`: String. Color of the bars when the price decreases
     `width_bar`: Float. Width of the bars
     `width_shadow`: Float. Width of the shadow
-    `fig_width`: Float. Width of figure in inches
-    `fig_height`: Float. Height of figure in inches
+    `shape0`: Positive integer. Length of axis 0 of the array representing the figure (height)
+    `shape1`: Positive integer. Length of axis10 of the array representing the figure (width)
     `bg_color`: String. Background color
-    `dpi`: Flat. DPI resolution
+    `dpi`: Float. DPI resolution
     :return: None
     '''
     up = data[data['Close'] > data['Open']]
@@ -51,35 +56,35 @@ def save_candle_chart(data: pd.DataFrame,
     color_down = dict_chart['color_down'] if 'color_down' in dict_chart else 'red'
     width_bar = dict_chart['width_bar'] if 'width_bar' in dict_chart else 0.6
     width_shadow = dict_chart['width_shadow'] if 'width_shadow' in dict_chart else 0.06
-    fig_width = dict_chart['fig_width'] if 'fig_width' in dict_chart else 0.72916  # Equivalent to 70 pixels 
-    fig_height = dict_chart['fig_height'] if 'fig_width' in dict_chart else 0.72916
+    shape0 = dict_chart['shape0'] if 'shape0' in dict_chart else 224
+    shape1 = dict_chart['shape1'] if 'shape1' in dict_chart else shape0
     bg_color = dict_chart['bg_color'] if 'bg_color' in dict_chart else 'black'
-    dpi = dict_chart['dpi'] if 'dpi' in dict_chart else 'figure'
+    dpi = dict_chart['dpi'] if 'dpi' in dict_chart else 600
+    
+    fig_height = shape0 / dpi
+    fig_width = shape1 / dpi
     plt.ioff()
     plt.figure(figsize = (fig_width, fig_height))
-    ax = plt.axes()
+    ax = plt.gca()
     ax.set_facecolor(bg_color)
-    ax.margins(x = 0, y = 0)
+    ax.axis('off')
     
     #Increase price bars
-    ax.bar(up.index, up['Close']-up['Open'], width_bar, bottom=up['Open'], color=color_up)
-    ax.bar(up.index, up['High']-up['Close'], width_shadow, bottom=up['Close'], color=color_up)
-    ax.bar(up.index, up['Low']-up['Open'], width_shadow, bottom=up['Open'], color=color_up)
+    ax.bar(up.index, up['Close']-up['Open'], width_bar, bottom = up['Open'], color = color_up)
+    ax.bar(up.index, up['High']-up['Close'], width_shadow, bottom = up['Close'], color = color_up)
+    ax.bar(up.index, up['Low']-up['Open'], width_shadow, bottom = up['Open'], color = color_up)
     
     #Decrease price bars
-    ax.bar(down.index, down['Close']-down['Open'], width_bar, bottom=down['Open'], color=color_down)
-    ax.bar(down.index, down['High']-down['Open'], width_shadow, bottom=down['Open'], color=color_down)
-    ax.bar(down.index, down['Low']-down['Close'], width_shadow, bottom=down['Close'], color=color_down)
-    
-    #We only care of the visual pattern and not the numeric values
-    ax.set_xticks([])
-    ax.set_yticks([])
+    ax.bar(down.index, down['Close']-down['Open'], width_bar, bottom = down['Open'], color = color_down)
+    ax.bar(down.index, down['High']-down['Open'], width_shadow, bottom = down['Open'], color = color_down)
+    ax.bar(down.index, down['Low']-down['Close'], width_shadow, bottom = down['Close'], color = color_down)
     
     #Saves the figure
     if not os.path.exists(filepath):
         os.mkdir(filepath)
     plt.savefig(os.path.join(filepath, f'{filename}.png'), 
-                dpi = dpi, backend = 'Agg',
+                dpi = dpi, 
+                backend = 'Agg',
                facecolor = bg_color)
     plt.close()
     plt.ion()
@@ -140,9 +145,10 @@ def main(config: dict, triggers: list) -> None:
                 save_candle_chart(data_img, file_name, file_path, dict_chart)
 
 if __name__ == '__main__':
-    triggers = ['BB_Buy', 'BB_Sell',
-                'MACD_Buy', 'MACD_Sell',
-               'RSI_Buy', 'RSI_Sell']
+    #triggers = ['BB_Buy', 'BB_Sell',
+    #            'MACD_Buy', 'MACD_Sell',
+    #           'RSI_Buy', 'RSI_Sell']
+    triggers = ['BB_Buy']
     with open(args.file, 'r') as f:
         config = json.load(f)
     main(config, triggers)
