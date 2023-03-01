@@ -57,6 +57,7 @@ def save_candle_chart(data: pd.DataFrame,
     plt.figure(figsize = (fig_width, fig_height))
     ax = plt.axes()
     ax.set_facecolor(bg_color)
+    ax.margins(x = 0, y = 0)
     
     #Increase price bars
     ax.bar(up.index, up['Close']-up['Open'], width_bar, bottom=up['Open'], color=color_up)
@@ -75,7 +76,9 @@ def save_candle_chart(data: pd.DataFrame,
     #Saves the figure
     if not os.path.exists(filepath):
         os.mkdir(filepath)
-    plt.savefig(os.path.join(filepath, f'{filename}.png'), dpi=300, backend = 'Agg')
+    plt.savefig(os.path.join(filepath, f'{filename}.png'), 
+                dpi=300, backend = 'Agg',
+               facecolor = bg_color)
     plt.close()
     plt.ion()
     
@@ -137,7 +140,7 @@ def main(config: dict, triggers: list) -> None:
 if __name__ == '__main__':
     triggers = ['BB_Buy', 'BB_Sell',
                 'MACD_Buy', 'MACD_Sell',
-               'RIS_Buy', 'RSI_Sell']
+               'RSI_Buy', 'RSI_Sell']
     with open(args.file, 'r') as f:
         config = json.load(f)
     main(config, triggers)
