@@ -9,10 +9,10 @@
         "color_up":"green",
         "color_down": "red",
         "width_bar": 0.6,
-        "width_shadow": 0.06,
-        "fig_width": 0.72916,
-        "fig_height": 0.72916,
+        "width_shadow": 0.1,
+        "shape0": 224,
+        "shape1": 224,
         "bg_color": "black",
-        "dpi": 300
+        "dpi": 600
     }
 }
