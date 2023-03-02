@@ -106,7 +106,13 @@ def main(config: dict) -> None:
     
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
-    count = 0
+    
+    if os.path.exists("log_labels.txt"):
+        os.remove("log_labels.txt")
+    
+    log_file = open('log_labels.txt', 'w')
+    bool_log = False
+    print(" ===== Labelling files ===== \n")
     for f in files:
         # Read file
         data = pd.read_csv(os.path.join(path_files, f))
@@ -121,6 +127,8 @@ def main(config: dict) -> None:
         
         # Only label if there's enough data
         if data.shape[0] < max(bol_w, w_slow, rsi_w):
+            bool_log = True
+            log_file.write(f'Not possible to label file {f}. Not enough useful data \n')
             continue
         
         # Label according to technical indicators
@@ -130,10 +138,10 @@ def main(config: dict) -> None:
         
         # Save labelled data
         data.to_csv(os.path.join(out_dir, f), index = False)
-        count = count + 1
         
-        print(f' === File {f} labelled === \n')
-        print(f' === {n_files - count} remaining files === \n')
+    log_file.close()
+    if bool_log:
+        print('WARNING: Not all files were labelled. Check log_labels.txt file')
 
 if __name__ == '__main__':
     with open(args.file, 'r') as f:
