@@ -105,7 +105,8 @@ def image2tensor(image_path, norm = True):
     image = image.permute([1, 2, 0])
     return image
 
-def main(config: dict, triggers: list) -> None:
+def main(config: dict) -> None:
+    triggers = config['triggers']
     path_lab = config['path_labels']
     out_dir = config['out_dir']
     samp_size = config['sample_size']
@@ -118,9 +119,9 @@ def main(config: dict, triggers: list) -> None:
     for trig in triggers:
         if trig.startswith('BB'):
             w = config['bb_w']
-        elif trig.startswith('macd'):
+        elif trig.startswith('MACD'):
             w = config['macd_w']
-        elif trig.startswith('rsi'):
+        elif trig.startswith('RSI'):
             w = config['rsi_w']
         print(f' ===== Creating files for {trig} ===== \n')
         for f in files:
@@ -168,12 +169,9 @@ def main(config: dict, triggers: list) -> None:
                 save_candle_chart(data_img, file_name, file_path, dict_chart)
 
 if __name__ == '__main__':
-    triggers = ['BB_Buy', 'BB_Sell',
-                'MACD_Buy', 'MACD_Sell',
-               'RSI_Buy', 'RSI_Sell']
     with open(args.file, 'r') as f:
         config = json.load(f)
-    main(config, triggers)
+    main(config)
     print(f' ===== Images created :) ===== \n')
     
     
