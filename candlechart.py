@@ -152,9 +152,13 @@ def main(config: dict) -> None:
                 print(f' ===== Not enough Negative {trig} signals for {f} and sample size {samp_size} ===== \n')
                 continue             
             
-            # Sample samp_size indices. No replacement
-            idx_samp = np.random.choice(idx, size = samp_size, replace = False)
-            idx_samp_no = np.random.choice(idx_no, size = samp_size, replace = False)
+            if samp_size == 0:
+                idx_samp = idx
+                idx_samp_no = np.random.choice(idx_no, size = len(idx_samp), replace = False)
+            else:
+                # Sample samp_size indices. No replacement
+                idx_samp = np.random.choice(idx, size = samp_size, replace = False)
+                idx_samp_no = np.random.choice(idx_no, size = samp_size, replace = False)
             
             # Create images for trigger moments (positive class)
             file_path = os.path.join(out_dir, trig)
@@ -173,7 +177,6 @@ def main(config: dict) -> None:
         
         print(f' ===== Finish with trigger {trig}. Elapsed time: {(end_time - init_time) / 60} minutes ===== \n')
             
-
 if __name__ == '__main__':
     with open(args.file, 'r') as f:
         config = json.load(f)
