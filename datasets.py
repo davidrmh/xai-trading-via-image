@@ -9,8 +9,8 @@ class ImageDataset(Dataset):
         self.dir_pos = dir_pos
         self.dir_neg = dir_neg
         self.bool_norm = bool_norm
-        self.files = os.listdir(dir_pos) + os.listdir(dir_pos)
-        self.labels = [1] * int(len(files) / 2) + [0] * int(len(files) / 2)
+        self.files = os.listdir(dir_pos) + os.listdir(dir_neg)
+        self.labels = [1] * int(len(self.files) / 2) + [0] * int(len(self.files) / 2)
     
     def image2tensor(self, image_path, bool_norm = True) -> torch.Tensor:
         image = read_image(image_path, ImageReadMode.RGB)
