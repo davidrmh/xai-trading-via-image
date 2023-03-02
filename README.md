@@ -25,7 +25,15 @@ This is the paper extending / using the results from Gideon thesis.
 
     * Retrieve the most similar neighbors from the KB even if they don't share the same label as the query image. Then explain using S/D maps. Since neighbors can have different labels, probably this approach is not as interpretable as the previous one but I'll just keep it in mind. It might be possible that, for neighbors with different labels, we can interpret the S/D maps as the part that the model does not consider relevant (two images agreeing in certains areas and yet having distintic labels).
 
-* **Possible research** How can we learn an autoenconder that has high visual similarity and at the same time uses the labels?
+## Ideas
+
+* How can we learn an autoenconder that has high visual similarity and at the same time uses the labels?
 
 * Even when the paper *Trading Via Image Classification* is not truly focused on developing trading strategies, using the proposed methodology we could develop a simple strategy.
     * Once we retrieve the neighbors of a query image, we can count how many of these neighbors had a correct label (remember that J.P. Morgan paper uses technical indicators to label the data, therefore we have false positive signals). To decide if a neighbor has a correct label we have to specify a look-ahead time window for the neighbor or see if in the future there is a sell signal. We can even weight the importance of a neighbor using the similarity with respect to the query image. In the end, if there is enough support, then we take the trading decision of the label assigned to the query image (or the weighted majority vote if the labels of the neighbors are mixed).
+
+* We could apply k-medoids clustering in the latent space. Then return to the image space and obtain a visual representation of a "typical signal". We could use the (di)similarity to obtain a new metric to use during the clustering process.
+
+* It would be interesting if we could explain why the classifier made a wrong decision. Let's say that for a query image the classifier says Buy and the prediction is wrong. Are the neighbors images of this query image, similar to it but with different labels?
+
+* Training a classifier in the latent space is better?
