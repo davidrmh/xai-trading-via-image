@@ -1,10 +1,11 @@
 {
-    "path_labels": "./labels_test",
-    "out_dir": "./images_test",
+    "path_labels": "./labels_2010_2017",
+    "out_dir": "./images_2010_2017",
     "sample_size": 10,
     "bb_w":20,
     "macd_w": 26,
     "rsi_w": 14,
+    "triggers": ["BB_Buy", "BB_Sell", "MACD_Buy", "MACD_Sell", "RSI_Buy", "RSI_Sell"],
     "dict_chart":{
         "color_up":"green",
         "color_down": "red",
