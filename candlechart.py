@@ -13,7 +13,6 @@ import pandas as pd
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
-from torchvision.io import read_image, ImageReadMode
 import argparse
 import json
 import time
@@ -88,23 +87,7 @@ def save_candle_chart(data: pd.DataFrame,
                 backend = 'Agg',
                facecolor = bg_color)
     plt.close()
-    plt.ion()
-    
-def image2tensor(image_path, norm = True):
-    image = read_image(image_path, ImageReadMode.RGB)
-    #Change dtype to float32
-    image = image.to(torch.float32)
-    
-    # Normalize in [0, 1]
-    if norm:
-        image = image / image.max()
-    
-    # Permute is used for plotting using matplotlib imshow
-    # a tensor with shape (channels, heigth, width)
-    # is reshaped to (height, width, channels)
-    # curiosly reshape method does not work
-    image = image.permute([1, 2, 0])
-    return image
+    plt.ion()  
 
 def main(config: dict) -> None:
     triggers = config['triggers']
