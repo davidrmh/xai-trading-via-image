@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 from torchvision.io import read_image, ImageReadMode
 import argparse
 import json
+import time
 
 
 parser = argparse.ArgumentParser()
@@ -117,6 +118,7 @@ def main(config: dict) -> None:
     files = os.listdir(path_lab)
     
     for trig in triggers:
+        init_time = time.perf_counter()
         if trig.startswith('BB'):
             w = config['bb_w']
         elif trig.startswith('MACD'):
@@ -167,6 +169,10 @@ def main(config: dict) -> None:
                 data_img = data[['Open', 'High', 'Low', 'Close']].iloc[i - w + 1:i + 1]
                 file_name = f"no_{trig}_{f.split('_')[0]}_{i}"
                 save_candle_chart(data_img, file_name, file_path, dict_chart)
+        end_time = time.perf_counter()
+        
+        print(f' ===== Finish with trigger {trig}. Elapsed time: {(end_time - init_time) / 60} minutes ===== \n')
+            
 
 if __name__ == '__main__':
     with open(args.file, 'r') as f:
