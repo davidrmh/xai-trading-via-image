@@ -1,0 +1,7 @@
+{
+    "tickers":"./tickers.csv",
+    "start": "01-01-2018",
+    "end": "12-31-2018",
+    "min": 1,
+    "out_dir": "./test_data_2018"
+}
