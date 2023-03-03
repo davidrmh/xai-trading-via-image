@@ -10,7 +10,8 @@ class ImageDataset(Dataset):
         self.dir_neg = dir_neg
         self.bool_norm = bool_norm
         self.files = os.listdir(dir_pos) + os.listdir(dir_neg)
-        self.labels = [1] * int(len(self.files) / 2) + [0] * int(len(self.files) / 2)
+        self.labels = [1.0] * int(len(self.files) / 2) + [0.0] * int(len(self.files) / 2)
+        self.labels = torch.tensor(self.labels, dtype = torch.float32)
     
     def image2tensor(self, image_path, bool_norm = True) -> torch.Tensor:
         image = read_image(image_path, ImageReadMode.RGB)
@@ -21,11 +22,6 @@ class ImageDataset(Dataset):
         if bool_norm:
             image = image / image.max()
 
-        # Permute is used for plotting using matplotlib imshow
-        # a tensor with shape (channels, heigth, width)
-        # is reshaped to (height, width, channels)
-        # curiosly reshape method does not work
-        image = image.permute([1, 2, 0])
         return image
     
     def __len__(self) -> int:
