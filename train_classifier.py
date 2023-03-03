@@ -43,6 +43,7 @@ out_file = 'jpclassifier'
 batch_size = 32
 epochs = 3
 checkpoint_iter = 5
+accept_lev = 0.5
 loss_metric = nn.BCELoss()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 model = JPClassifier().to(device)
@@ -70,8 +71,21 @@ train_load = DataLoader(train_ds, batch_size = batch_size, shuffle=True)
 test_ds = ds.ImageDataset(test_dir_pos, test_dir_neg)
 test_load = DataLoader(test_ds, batch_size = batch_size, shuffle = False)
 
+def test_model(model, test_load, accept_lev = 0.5):
+    model.train(False)
+    count_correct, total_count = 0.0, 0.0
+    for batch_im, batch_lab in test_load:
+        batch_im, batch_lab = batch_im.to(device), batch_lab.to(device)
+        with torch.no_grad():
+            pred_lab = model(batch_im)
+            count_correct += ((pred_lab >= accept_lev) == batch_lab).sum().item()
+            total_count += batch_lab.shape[0]
+    test_accuracy = count_correct / total_count
+    return test_accuracy
+            
 # Training loop
 for epoch in range(epochs):
+    model.train(True)
     running_loss = 0.0
     for i, data in enumerate(train_load, start = 0):
         batch_im, batch_lab = data
@@ -95,11 +109,13 @@ for epoch in range(epochs):
         running_loss = running_loss + loss.item()
         
         if (i + 1) % 100 == 0:
-            print(f'Epoch: {epoch + 1}, Batch: {i + 1}, Average loss: {running_loss / (i + 1):.3f}')
+            print(f'Epoch: {epoch + 1}, Batch: {i + 1}, Average train loss: {running_loss / (i + 1):.3f}')
     
     if (epoch + 1) % checkpoint_iter == 0:
         chk_name = f'{os.path.join(out_path, out_file)}.pth'
         torch.save(model.state_dict(), chk_name)
+    test_accuracy = test_model(model, test_load, accept_lev)
+    print(f' ===== By the end of epoch {epoch + 1}, the test accuracy is: {test_accuracy:.4f} ===== \n')
 print(" ===== Model Trained ===== \n")
         
 
