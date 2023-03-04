@@ -1,0 +1,16 @@
+{
+    "train_dir_pos": ["./images_2010_2017/BB_Buy",
+                      "./images_2010_2017/MACD_Buy",
+                    "./images_2010_2017/RSI_Buy"],
+    "train_dir_neg": ["./images_2010_2017/no_BB_Buy",
+                     "./images_2010_2017/no_MACD_Buy",
+                    "./images_2010_2017/no_RSI_Buy"],
+    "test_dir_pos": ["./images_2018/BB_Buy", "./images_2018/MACD_Buy", "./images_2018/RSI_Buy"],
+    "test_dir_neg": ["./images_2018/no_BB_Buy", "./images_2018/no_MACD_Buy", "./images_2018/no_RSI_Buy"],
+    "out_path": "./trained_classiffiers",
+    "out_file": ["BB_Buy_classif", "MACD_Buy_classif", "RSI_Buy_classif"],
+    "adam_par": {"lr": 0.001, "betas": [0.9, 0.999], "eps":1e-08},
+    "batch_size": 16,
+    "epochs": 50,
+    "accept_lev": 0.5
+}
