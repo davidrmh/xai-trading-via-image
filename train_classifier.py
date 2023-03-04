@@ -66,6 +66,7 @@ def main(config) -> None:
     batch_size = config['batch_size']
     epochs = config['epochs']
     accept_lev = config['accept_lev']
+    early_stop = config['early']
 
     if not os.path.exists(out_path):
         os.mkdir(out_path)
@@ -94,11 +95,12 @@ def main(config) -> None:
         train_load = DataLoader(train_ds, batch_size = batch_size, shuffle = True)
         test_ds = ds.ImageDataset(test_dir_pos[i], test_dir_neg[i])
         test_load = DataLoader(test_ds, batch_size = batch_size, shuffle = False)
-
-        # Training loop
+        
+        count_stop = 0
         prev_test_accuracy = 0.0
         test_accuracy = 0.0
         print(f' {"*" * 25} Training Classifier {out_file[i]} {"*" * 25} \n')
+        # Training loop
         for epoch in range(epochs):
             model.train(True)
             running_loss = 0.0
@@ -130,7 +132,16 @@ def main(config) -> None:
             if test_accuracy > prev_test_accuracy:
                 print(f' {"@"*20} Improvement in test accuracy from {prev_test_accuracy:.4f} to {test_accuracy:.4f}. Saving model {"@"*20} \n')
                 torch.save(model.state_dict(), chk_name)
-                prev_test_accuracy = test_accuracy    
+                prev_test_accuracy = test_accuracy
+                count_stop = 0
+            else:
+                count_stop = count_stop + 1
+            
+            # If no improvement in consecutive epochs
+            # move to the next model
+            if count_stop >= early_stop:
+                print(f' {"X" * 20} No improvement in test accuracy for {count_stop} consecutive epochs {"X" * 20}. Training next model. \n')
+                break
             print(f' {"="*10} By the end of epoch {epoch + 1}/{epochs}, the test accuracy is: {test_accuracy:.4f} {"="*10} \n')
 
 if __name__ == '__main__':
