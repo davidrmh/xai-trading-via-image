@@ -1,4 +1,6 @@
 import os
+import time
+import json
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
@@ -6,7 +8,14 @@ import datasets as ds
 import numpy as np
 from torch import nn
 from torch.utils.data import DataLoader
+import argparse
 
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-f', '--file',
+                   help = 'Path of the JSON file with the input arguments',
+                   type = str)
+args = parser.parse_args()
 
 class JPClassifier(nn.Module):
     """
@@ -33,90 +42,103 @@ class JPClassifier(nn.Module):
         x = self.sig(x)
         return x.flatten()
 
-# Input configuration
-train_dir_pos = './images_2010_2017/BB_Buy/'
-train_dir_neg = './images_2010_2017/no_BB_Buy/'
-test_dir_pos = './images_2018/BB_Buy/'
-test_dir_neg = './images_2018/no_BB_Buy/'
-out_path = './jpclassifier'
-out_file = 'jpclassifier'
-batch_size = 32
-epochs = 3
-checkpoint_iter = 5
-accept_lev = 0.5
-loss_metric = nn.BCELoss()
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-model = JPClassifier().to(device)
-opt = optim.Adam(model.parameters())
+    def test(self, test_load, accept_lev = 0.5):
+        self.train(False)
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        count_correct, total_count = 0.0, 0.0
+        for batch_im, batch_lab in test_load:
+            batch_im, batch_lab = batch_im.to(device), batch_lab.to(device)
+            with torch.no_grad():
+                pred_lab = self(batch_im)
+                count_correct += ((pred_lab >= accept_lev) == batch_lab).sum().item()
+                total_count += batch_lab.shape[0]
+        test_accuracy = count_correct / total_count
+        return test_accuracy
 
-if not os.path.exists(out_path):
-    os.mkdir(out_path)
+def main(config) -> None:
+    train_dir_pos = config['train_dir_pos']
+    train_dir_neg = config['train_dir_neg']
+    test_dir_pos = config['test_dir_pos']
+    test_dir_neg = config['test_dir_neg']
+    out_path = config['out_path']
+    out_file = config['out_file']
+    adam_par = config['adam_par'] if 'adam_par' in config else {}
+    batch_size = config['batch_size']
+    epochs = config['epochs']
+    accept_lev = config['accept_lev']
 
-# Function for setting the seed
-def set_seed(seed):
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed(seed)
-        torch.cuda.manual_seed_all(seed)
-set_seed(19900802)
+    if not os.path.exists(out_path):
+        os.mkdir(out_path)
+    loss_metric = nn.BCELoss()
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-# For reproducibility
-torch.backends.cudnn.determinstic = True 
-torch.backends.cudnn.benchmark = False
-
-# Data loaders
-train_ds = ds.ImageDataset(train_dir_pos, train_dir_neg)
-train_load = DataLoader(train_ds, batch_size = batch_size, shuffle=True)
-test_ds = ds.ImageDataset(test_dir_pos, test_dir_neg)
-test_load = DataLoader(test_ds, batch_size = batch_size, shuffle = False)
-
-def test_model(model, test_load, accept_lev = 0.5):
-    model.train(False)
-    count_correct, total_count = 0.0, 0.0
-    for batch_im, batch_lab in test_load:
-        batch_im, batch_lab = batch_im.to(device), batch_lab.to(device)
-        with torch.no_grad():
-            pred_lab = model(batch_im)
-            count_correct += ((pred_lab >= accept_lev) == batch_lab).sum().item()
-            total_count += batch_lab.shape[0]
-    test_accuracy = count_correct / total_count
-    return test_accuracy
-            
-# Training loop
-for epoch in range(epochs):
-    model.train(True)
-    running_loss = 0.0
-    for i, data in enumerate(train_load, start = 0):
-        batch_im, batch_lab = data
-        batch_im, batch_lab = batch_im.to(device), batch_lab.to(device)
-        
-        # Zero gradients
-        opt.zero_grad()
-        
-        # Predictions
-        pred_lab = model(batch_im)
-        
-        # Loss
-        loss = loss_metric(pred_lab, batch_lab)
-        
-        # Backpropagation
-        loss.backward()
-        
-        # Update parameters
-        opt.step()
-        
-        running_loss = running_loss + loss.item()
-        
-        if (i + 1) % 100 == 0:
-            print(f'Epoch: {epoch + 1}, Batch: {i + 1}, Average train loss: {running_loss / (i + 1):.3f}')
+    # Function for setting the seed
+    def set_seed(seed):
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed(seed)
+            torch.cuda.manual_seed_all(seed)
+    set_seed(19900802)
+    # For reproducibility
+    torch.backends.cudnn.determinstic = True 
+    torch.backends.cudnn.benchmark = False
     
-    if (epoch + 1) % checkpoint_iter == 0:
-        chk_name = f'{os.path.join(out_path, out_file)}.pth'
-        torch.save(model.state_dict(), chk_name)
-    test_accuracy = test_model(model, test_load, accept_lev)
-    print(f' ===== By the end of epoch {epoch + 1}, the test accuracy is: {test_accuracy:.4f} ===== \n')
-print(" ===== Model Trained ===== \n")
+    for i in range(len(train_dir_pos)):
+        chk_name = f'{os.path.join(out_path, out_file[i])}.pth'
+        model = JPClassifier().to(device)
+        opt = optim.Adam(model.parameters(), **adam_par)
+
+        # Data loaders
+        train_ds = ds.ImageDataset(train_dir_pos[i], train_dir_neg[i])
+        train_load = DataLoader(train_ds, batch_size = batch_size, shuffle = True)
+        test_ds = ds.ImageDataset(test_dir_pos[i], test_dir_neg[i])
+        test_load = DataLoader(test_ds, batch_size = batch_size, shuffle = False)
+
+        # Training loop
+        prev_test_accuracy = 0.0
+        test_accuracy = 0.0
+        print(f' {"*" * 25} Training Classifier {out_file[i]} {"*" * 25} \n')
+        for epoch in range(epochs):
+            model.train(True)
+            running_loss = 0.0
+            for j, data in enumerate(train_load):
+                batch_im, batch_lab = data
+                batch_im, batch_lab = batch_im.to(device), batch_lab.to(device)
+
+                # Zero gradients
+                opt.zero_grad()
+
+                # Predictions
+                pred_lab = model(batch_im)
+
+                # Loss
+                loss = loss_metric(pred_lab, batch_lab)
+
+                # Backpropagation
+                loss.backward()
+
+                # Update parameters
+                opt.step()
+
+                running_loss = running_loss + loss.item()
+
+                if (j + 1) % 100 == 0:
+                    print(f'Model: {out_file[i]}. Epoch: {epoch + 1}/{epochs}, Batch: {j + 1}/{len(train_load)}, Average train loss: {running_loss / (j + 1):.4f} \n')
+                    
+            test_accuracy = model.test(test_load, accept_lev)
+            if test_accuracy > prev_test_accuracy:
+                print(f' {"@"*20} Improvement in test accuracy from {prev_test_accuracy:.4f} to {test_accuracy:.4f}. Saving model {"@"*20} \n')
+                torch.save(model.state_dict(), chk_name)
+                prev_test_accuracy = test_accuracy    
+            print(f' {"="*10} By the end of epoch {epoch + 1}/{epochs}, the test accuracy is: {test_accuracy:.4f} {"="*10} \n')
+
+if __name__ == '__main__':
+    with open(args.file, 'r') as f:
+        config = json.load(f)
+    main(config)
+    print(" ===== Model(s) Trained ===== \n")
+
         
 
 
