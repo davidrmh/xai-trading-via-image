@@ -59,6 +59,7 @@ def main(config: dict) -> None:
         # Make predictions
         list_pred = []
         list_true = []
+        list_agree = []
         list_f = []
         for j, data in enumerate(dataloader):
             if mode == 'val':
@@ -71,17 +72,20 @@ def main(config: dict) -> None:
                 pred = model(batch_im)
             pred[pred >= accept_lev] = 1.0
             pred[pred < accept_lev] = 0.0
+            pred = pred.cpu().detach()
             
             # Update lists for creating the pandas DataFrame
-            list_pred.extend(pred.cpu().detach().numpy())
+            list_pred.extend(pred.numpy())
             list_f.extend(batch_f)
             if mode == 'val':
-                list_true.extend(batch_lab.cpu().detach().numpy())
+                agree = pred == batch_lab
+                list_true.extend(batch_lab.numpy())
+                list_agree.extend(agree.numpy())
                 
         # Save results in a pandas DataFrame
         filename = f"pred_{path_model[i].split('/')[-1].replace('.pth', '')}.csv"
         if mode == 'val':
-            df_data = {"file":list_f, "prediction":list_pred, 'truth': list_true}
+            df_data = {"file":list_f, "prediction":list_pred, 'truth': list_true, 'is_correct?':list_agree}
         else:
             df_data = {"file":list_f, "prediction":list_pred}
         df = pd.DataFrame(data = df_data)
