@@ -32,6 +32,31 @@ class ImageDataset(Dataset):
             image_path = os.path.join(self.dir_neg, self.files[idx])
         image = self.image2tensor(image_path)
         
-        return image, self.labels[idx]
+        return image, self.labels[idx], image_path
         
+class PredImageDataset(Dataset):
+    
+    def __init__(self, dirs: list[str]):
+        self.files = []
+        for d in dirs:
+            self.files.extend([os.path.join(d, f) for f in os.listdir(d)])
+    
+    # TO DO: Move this function out of the class
+    # in order to avoid repetition with ImageDataset class
+    def image2tensor(self, image_path) -> torch.Tensor:
+        image = read_image(image_path, ImageReadMode.RGB)
+        #Change dtype to float32
+        image = image.to(torch.float32)
+
+        # Normalize in [0, 1]
+        image = image / image.max()
+
+        return image
+    
+    def __len__(self) -> int:
+        return len(self.files)
+    
+    def __getitem__(self, idx):
+        image = self.image2tensor(self.files[idx])
+        return image, self.files[idx]
         

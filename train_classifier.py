@@ -45,7 +45,7 @@ class JPClassifier(nn.Module):
         self.train(False)
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         count_correct, total_count = 0.0, 0.0
-        for batch_im, batch_lab in test_load:
+        for batch_im, batch_lab, _ in test_load:
             batch_im, batch_lab = batch_im.to(device), batch_lab.to(device)
             with torch.no_grad():
                 pred_lab = self(batch_im)
@@ -105,7 +105,7 @@ def main(config) -> None:
             model.train(True)
             running_loss = 0.0
             for j, data in enumerate(train_load):
-                batch_im, batch_lab = data
+                batch_im, batch_lab, _ = data
                 batch_im, batch_lab = batch_im.to(device), batch_lab.to(device)
 
                 # Zero gradients
