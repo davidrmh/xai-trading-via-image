@@ -8,8 +8,10 @@ class ImageDataset(Dataset):
     def __init__(self, dir_pos: str, dir_neg: str):
         self.dir_pos = dir_pos
         self.dir_neg = dir_neg
-        self.files = os.listdir(dir_pos) + os.listdir(dir_neg)
-        self.labels = [1.0] * int(len(self.files) / 2) + [0.0] * int(len(self.files) / 2)
+        self.files_pos = os.listdir(dir_pos)
+        self.files_neg = os.listdir(dir_neg)
+        self.files = self.files_pos + self.files_neg
+        self.labels = [1.0] * len(self.files_pos) + [0.0] * len(self.files_neg)
         self.labels = torch.tensor(self.labels, dtype = torch.float32)
     
     def image2tensor(self, image_path) -> torch.Tensor:
@@ -26,7 +28,7 @@ class ImageDataset(Dataset):
         return len(self.labels)
     
     def __getitem__(self, idx):
-        if self.labels[idx] == 1:
+        if idx < len(self.files_pos):
             image_path = os.path.join(self.dir_pos, self.files[idx])
         else:
             image_path = os.path.join(self.dir_neg, self.files[idx])
