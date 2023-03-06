@@ -42,7 +42,7 @@ class JPClassifier(nn.Module):
         x = self.sig(x)
         return x.flatten()
 
-    def test(self, test_load, accept_lev = 0.5):
+    def test_acc(self, test_load, accept_lev = 0.5):
         self.train(False)
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         count_correct, total_count = 0.0, 0.0
@@ -53,6 +53,7 @@ class JPClassifier(nn.Module):
                 count_correct += ((pred_lab >= accept_lev) == batch_lab).sum().item()
                 total_count += batch_lab.shape[0]
         test_accuracy = count_correct / total_count
+        self.train(True)
         return test_accuracy
 
 def main(config) -> None:
@@ -128,7 +129,7 @@ def main(config) -> None:
                 if (j + 1) % 100 == 0:
                     print(f'Model: {out_file[i]}. Epoch: {epoch + 1}/{epochs}, Batch: {j + 1}/{len(train_load)}, Average train loss: {running_loss / (j + 1):.4f} \n')
                     
-            test_accuracy = model.test(test_load, accept_lev)
+            test_accuracy = model.test_acc(test_load, accept_lev)
             if test_accuracy > prev_test_accuracy:
                 print(f' {"@"*20} Improvement in test accuracy from {prev_test_accuracy:.4f} to {test_accuracy:.4f}. Saving model {"@"*20} \n')
                 torch.save(model.state_dict(), chk_name)
