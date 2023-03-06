@@ -1,0 +1,24 @@
+{
+    "path_model":["./trained_classifiers/BB_Buy_classif.pth",
+    "./trained_classifiers/BB_Sell_classif.pth",
+    "./trained_classifiers/MACD_Buy_classif.pth",
+    "./trained_classifiers/MACD_Sell_classif.pth",
+    "./trained_classifiers/RSI_Buy_classif.pth",
+    "./trained_classifiers/RSI_Sell_classif.pth"],
+
+    "path_img": [["./images_2018/BB_Buy/", "./images_2018/no_BB_Buy/"],
+    ["./images_2018/BB_Sell/", "./images_2018/no_BB_Sell/"],
+    ["./images_2018/MACD_Buy/", "./images_2018/no_MACD_Buy/"],
+    ["./images_2018/MACD_Sell/", "./images_2018/no_MACD_Sell/"],
+    ["./images_2018/RSI_Buy/", "./images_2018/no_RSI_Buy/"],
+    ["./images_2018/RSI_Sell/", "./images_2018/no_RSI_Sell/"]],
+
+    "mode": "pred",
+
+    "batch_size": 32,
+
+    "accept_lev": 0.5,
+
+    "out_dir":"./test_images_2018"
+
+}
