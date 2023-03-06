@@ -1,0 +1,12 @@
+{
+    "function": "separate_pred",
+
+    "file_pred": ["./predictions_images_2018/pred_BB_Buy_classif.csv",
+    "./predictions_images_2018/pred_BB_Sell_classif.csv",
+    "./predictions_images_2018/pred_MACD_Buy_classif.csv",
+    "./predictions_images_2018/pred_MACD_Sell_classif.csv",
+    "./predictions_images_2018/pred_RSI_Buy_classif.csv",
+    "./predictions_images_2018/pred_RSI_Sell_classif.csv"],
+
+    "out_dir": "./analysis_pred_images_2018"
+}
