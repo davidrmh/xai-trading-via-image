@@ -3,6 +3,8 @@ import json
 import shutil
 import argparse
 import pandas as pd
+import numpy as np
+import torch
 
 
 parser = argparse.ArgumentParser()
@@ -10,6 +12,15 @@ parser.add_argument('-f', '--file',
                    help = 'Path of the JSON file with the input arguments',
                    type = str)
 args = parser.parse_args()
+
+    # Function for setting the seed
+def set_seed(seed):
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+
 
 def separate_correct(config: dict) -> None:
     """
