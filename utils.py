@@ -11,7 +11,7 @@ parser.add_argument('-f', '--file',
                    type = str)
 args = parser.parse_args()
 
-def separate_pred(config: dict) -> None:
+def separate_correct(config: dict) -> None:
     """
     Given a CSV (created with pred_classfier.py) with a classifier's predictions
     separate the classified images in correctly/uncorrectly classified.
@@ -31,8 +31,8 @@ def separate_pred(config: dict) -> None:
         
         if not os.path.exists(os.path.join(out_dir, subdir)):
             os.mkdir(os.path.join(out_dir, subdir))
-            os.mkdir(subdir_correct)
-            os.mkdir(subdir_incorrect)
+        os.mkdir(subdir_correct)
+        os.mkdir(subdir_incorrect)
             
         correct = df[df['is_correct?'] == True]['file']
         incorrect = df[df['is_correct?'] == False]['file']
@@ -48,10 +48,50 @@ def separate_pred(config: dict) -> None:
         print(f'{"*" * 25} Finished with file {file_pred[i]} {"*" * 25}\n')
         
     print(f"{'=='*25} Files copied {'=='*25}")
+
+def separate_class(config: dict) -> None:
+    """
+    Given a CSV (created with pred_classfier.py) with a classifier's predictions
+    separate the classified images in positive/negative class.
+    """
+    file_pred = config['file_pred']
+    out_dir = config['out_dir']
     
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
+    
+    for i in range(len(file_pred)):
+        df = pd.read_csv(file_pred[i])
+        
+        subdir = file_pred[i].split('/')[-1].replace('.csv', '')
+        subdir_positive = os.path.join(out_dir, f'{subdir}/positive')
+        subdir_negative = os.path.join(out_dir, f'{subdir}/negative')
+        
+        if not os.path.exists(os.path.join(out_dir, subdir)):
+            os.mkdir(os.path.join(out_dir, subdir))
+        os.mkdir(subdir_positive)
+        os.mkdir(subdir_negative)
+            
+        positive = df[df['prediction'] == 1.0]['file']
+        negative = df[df['prediction'] == 0.0]['file']
+        
+        # Files must be accesible from the directory where this file
+        # is stored
+        for f in positive:
+            filepath = os.path.join(subdir_positive, f.split('/')[-1])
+            shutil.copyfile(f, filepath)
+        for f in negative:
+            filepath = os.path.join(subdir_negative, f.split('/')[-1])
+            shutil.copyfile(f, filepath)
+        print(f'{"*" * 25} Finished with file {file_pred[i]} {"*" * 25}\n')
+        
+    print(f"{'=='*25} Files copied {'=='*25}")
+
 if __name__ == '__main__':
     with open(args.file, 'r') as f:
         config = json.load(f)
-    if config['function'] == 'separate_pred':
-        separate_pred(config)
+    if config['function'].lower() == 'separate_correct':
+        separate_correct(config)
+    if config['function'].lower() == 'separate_class':
+        separate_class(config)
     # Here is possible to add more functions to be called
