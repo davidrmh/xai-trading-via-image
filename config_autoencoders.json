@@ -1,0 +1,31 @@
+{
+        "train_images":[["./70_by_70_images_2010_2017/BB_Buy", "./70_by_70_images_2010_2017/no_BB_Buy"],
+    ["./70_by_70_images_2010_2017/MACD_Buy", "./70_by_70_images_2010_2017/no_MACD_Buy"],
+    ["./70_by_70_images_2010_2017/RSI_Buy", "./70_by_70_images_2010_2017/no_RSI_Buy"]],
+
+         "test_images": [["./70_by_70_images_2018/BB_Buy/", "./70_by_70_images_2018/no_BB_Buy/"],
+         ["./70_by_70_images_2018/MACD_Buy/", "./70_by_70_images_2018/no_MACD_Buy/"],
+         ["./70_by_70_images_2018/Rsi_Buy/", "./70_by_70_images_2018/no_RSI_Buy/"]],
+
+        "out_dir": "./70_by_70_autoencoders",
+
+        "out_files": ["BB_Buy_autoencoder", "MACD_Buy_autoencoder", "RSI_Buy_autoencoder"],
+
+        "img_shape": [70, 70],
+
+        "batch_size": 16,
+
+        "epochs": 50,
+
+        "early_iter": 5,
+
+        "early_tol": 1e-6,
+
+        "optim": "adam",
+
+        "optim_par": {},
+
+        "continue": "no",
+
+        "seed": 19900802
+}
