@@ -1,0 +1,23 @@
+{
+    "path_auto": ["./70_by_70_autoencoders/BB_Buy_autoencoder.pth",
+                 "./70_by_70_autoencoders/MACD_Buy_autoencoder.pth",
+                 "./70_by_70_autoencoders/RSI_Buy_autoencoder.pth"],
+    
+    "path_train": [ ["./70_by_70_images_2010_2017/BB_Buy", "./70_by_70_images_2010_2017/no_BB_Buy"],
+                  ["./70_by_70_images_2010_2017/MACD_Buy", "./70_by_70_images_2010_2017/no_MACD_Buy"],
+                  ["./70_by_70_images_2010_2017/RSI_Buy", "./70_by_70_images_2010_2017/no_RSI_Buy"]],
+    
+    "path_test":  [ ["./70_by_70_images_2018/BB_Buy", "./70_by_70_images_2018/no_BB_Buy"],
+                  ["./70_by_70_images_2018/MACD_Buy", "./70_by_70_images_2018/no_MACD_Buy"],
+                  ["./70_by_70_images_2018/RSI_Buy", "./70_by_70_images_2018/no_RSI_Buy"]],
+    
+    "out_dir": "./70_by_70_pca/",
+    
+    "img_shape": [70, 70],
+    
+    "num_comp": 512,
+    
+    "batch_size": 32,
+    
+    "seed": 19900802
+}
