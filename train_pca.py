@@ -4,6 +4,7 @@ import torch
 import pickle
 import resnet
 import argparse
+import pandas as pd
 from utils import set_seed
 from datasets import PredImageDataset
 from sklearn.decomposition import PCA
@@ -39,12 +40,15 @@ def main(config: dict) -> None:
     """
     Creates pickle files.
     - pca_*.pkl: Contains the PCA object fitted
-      to the features maps of the training data
+      with the feature maps of the training data
       
-    - train_pca_*.pkl: Dictorionary with the latent representation
+    - scaler_*.pkl: Contains the StandardScaler object
+    fitted with the feature maps of the training data
+      
+    - train_pca_*.pkl: DataFrame with the latent representation
     of the feature maps from the training data
     
-    - test_pca_*.pkl: Dictionary with the latent representation of the
+    - test_pca_*.pkl: DataFrame with the latent representation of the
     feature maps from the test data
     """
     path_auto = config['path_auto']
@@ -108,28 +112,32 @@ def main(config: dict) -> None:
         # for (scaled) test feature maps
         pca_test = pca.transform(test_feat_map)
         
-        # Create dictionaries storing the latent
+        # Create DataFrames storing the latent
         # representations
-        dict_pca_train = dict([(train_files[j], pca_train[j])
-                              for j in range(len(train_files))])
+        df_pca_train = pd.concat((pd.Series(train_files, name = 'file'),
+                                 pd.DataFrame(pca_train)), axis = 1)
         
-        dict_pca_test = dict([(test_files[j], pca_test[j])
-                              for j in range(len(test_files))])
+        df_pca_test = pd.concat((pd.Series(test_files, name = 'file'),
+                                 pd.DataFrame(pca_test)), axis = 1)
         
         # Save objects
         aux = path_auto[i].split('/')[-1].replace('pth', 'pkl')
         f_pca = os.path.join(out_dir, f'pca_{aux}')
+        f_scaler = os.path.join(out_dir, f'scaler_{aux}')
         f_train_pca = os.path.join(out_dir, f'train_pca_{aux}')
         f_test_pca = os.path.join(out_dir, f'test_pca_{aux}')
         
         with open(f_pca, 'wb') as f:
             pickle.dump(pca, f)
+            
+        with open(f_scaler, 'wb') as f:
+            pickle.dump(scaler, f)
         
         with open(f_train_pca, 'wb') as f:
-            pickle.dump(dict_pca_train, f)
+            pickle.dump(df_pca_train, f)
         
         with open(f_test_pca, 'wb') as f:
-            pickle.dump(dict_pca_test, f)
+            pickle.dump(df_pca_test, f)
             
         print(f" {'*' * 20} Finishing with model {aux} {'*' * 20}\n")
 
