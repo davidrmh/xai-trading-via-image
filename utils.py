@@ -5,6 +5,7 @@ import argparse
 import pandas as pd
 import numpy as np
 import torch
+from torchvision.io import read_image, ImageReadMode
 
 
 parser = argparse.ArgumentParser()
@@ -13,7 +14,16 @@ parser.add_argument('-f', '--file',
                    type = str)
 args = parser.parse_args()
 
-    # Function for setting the seed
+def image2tensor(image_path: str) -> torch.Tensor:
+     image = read_image(image_path, ImageReadMode.RGB)
+     #Change dtype to float32
+     image = image.to(torch.float32)
+
+     # Normalize in [0, 1]
+     image = image / image.max()
+     return image
+
+ # Function for setting the seed
 def set_seed(seed):
     np.random.seed(seed)
     torch.manual_seed(seed)
