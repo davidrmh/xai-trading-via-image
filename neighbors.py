@@ -27,12 +27,13 @@ num_neighbors = 5
 # Figure size
 figsize = (10, 10)
 
-# TO DO: path to save the figure
-# For the moment I need to also visualize S/D maps
-
 # Labels for positive/negative class
 lab_pos = 'Buy'
 lab_neg = 'No Buy'
+
+# TO DO: path to save the figure
+# For the moment I need to also visualize S/D maps
+
 
 df_test_pred = pd.read_csv(test_pred_file)
 df_train_pred = pd.read_csv(train_pred_file)
@@ -73,11 +74,12 @@ for i, idx in enumerate(wrong_idx):
     axs[i, 0].set_xticks([])
     axs[i, 0].set_yticks([])
     
-    # Get neighbors
-    # To be compatible with NearestNeighbors
-    # we need to reshape
-    idx_neighbors = knn.kneighbors(latent_query.reshape((1, -1)), return_distance = False)
+    # Get neighbors and orders (increasingly) them according to their distance
+    # to the latent representation of the query image
+    dist, idx_neighbors = knn.kneighbors(latent_query.reshape((1, -1)), return_distance = True)
+    dist = dist.reshape((dist.shape[1], ))
     idx_neighbors = idx_neighbors.reshape((idx_neighbors.shape[1], ))
+    idx_neighbors = idx_neighbors[dist.argsort()[::-1]]
     
     # Plot row
     for j, idx_n in enumerate(idx_neighbors):
