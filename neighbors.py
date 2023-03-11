@@ -7,25 +7,28 @@ import matplotlib.pyplot as plt
 from sklearn.neighbors import NearestNeighbors
 
 # File containing the predictions from a classifier over the training set
-train_pred_file = "./70_by_70_predictions_images_2010_2017/pred_MACD_Buy_classif.csv"
+train_pred_file = "./70_by_70_predictions_images_2010_2017/pred_BB_Buy_classif.csv"
 
 # File containing the predictions from a classifier over the test set
-test_pred_file = "./70_by_70_predictions_images_2018/pred_MACD_Buy_classif.csv"
+test_pred_file = "./70_by_70_predictions_images_2018/pred_BB_Buy_classif.csv"
 
 # File containing the latent representations of the images in the train set
-train_lat_file = "./70_by_70_pca/train_pca_MACD_Buy_autoencoder.pkl"
+train_lat_file = "./70_by_70_pca/train_pca_BB_Buy_autoencoder.pkl"
 
 # File containing the latent representations of the images in the test set
-test_lat_file = "./70_by_70_pca/test_pca_MACD_Buy_autoencoder.pkl"
+test_lat_file = "./70_by_70_pca/test_pca_BB_Buy_autoencoder.pkl"
 
-# Number of wrong predictions from the test set to analyze
-num_wrong = 4
+# Number of query predictions from the test set to analyze
+num_query = 5
+
+# Type of prediction (True => right prediction, False => Wrong prediction)
+bool_type = False
 
 # Number of neighbors to compare with (neighbors come from training data)
-num_neighbors = 5
+num_neighbors = 10
 
 # Figure size
-figsize = (10, 10)
+figsize = (24, 24)
 
 # Labels for positive/negative class
 lab_pos = 'Buy'
@@ -33,7 +36,6 @@ lab_neg = 'No Buy'
 
 # TO DO: path to save the figure
 # For the moment I need to also visualize S/D maps
-
 
 df_test_pred = pd.read_csv(test_pred_file)
 df_train_pred = pd.read_csv(train_pred_file)
@@ -44,16 +46,16 @@ with open(train_lat_file, 'rb') as f:
 with open(test_lat_file, 'rb') as f:
     latent_test = pickle.load(f)
 
-wrong_idx = np.random.choice(df_test_pred[df_test_pred['is_correct?'] == False].index,
-                             size = num_wrong,
+query_idx = np.random.choice(df_test_pred[df_test_pred['is_correct?'] == bool_type].index,
+                             size = num_query,
                              replace = False)
 
 # Fit nearest neighbors object
 knn = NearestNeighbors(n_neighbors = num_neighbors)
 knn.fit(latent_train.iloc[:, 1:].to_numpy())
-fig, axs = plt.subplots(num_wrong, num_neighbors + 1, figsize = figsize)
+fig, axs = plt.subplots(num_query, num_neighbors + 1, figsize = figsize)
 
-for i, idx in enumerate(wrong_idx):
+for i, idx in enumerate(query_idx):
     # Get query image from test set
     path_img_query = df_test_pred.iloc[idx, 0]
     str_aux_query = df_test_pred.iloc[idx, 0].split('/')[-1]
