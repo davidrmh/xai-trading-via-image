@@ -217,7 +217,7 @@ The structure of file `config_train.json` is the following
 
 * `epochs`: Positive integer. Number of epochs.
 
-* `early`: Positive integer.
+* `early`: Positive integer. Number of consecutive epochs without improving in **test** accuracy to stop the training of the model.
 
 <b style="color:MediumSeaGreen">Output</b>: one .pth file per element in `out_file` is created in `out_path`. This file contains the trained classifier.
 
@@ -281,3 +281,86 @@ The structure of the file `config_pred.json` is as follows
   * `out_dir`: String. Path of the directory where the predictions are stored.
 
 <b style="color:MediumSeaGreen">Output</b>: For each model in `path_model` a csv file is created. The csv file contains the path of each classified image (column file), its predicted label (column precition) and, if `mode: "val"`, the true label (column truth) and a column specifying if the prediction was correct (column is_correct?).
+
+---
+
+## Step 6 - Train autoencoders
+
+To train the autoenconder(s) use the python file `train_autoencoder.py` together with the configuration file `config_autoencoders.json`.
+
+In Windows using Anaconda powershell:
+
+```
+python.exe train_autoencoder.py -f config_autoencoders.json
+```
+
+The structure of the file `config_autoencoders.json` is the following
+
+```json
+{
+        "train_images":[["./70_by_70_images_2010_2017/BB_Buy", "./70_by_70_images_2010_2017/no_BB_Buy"],
+    ["./70_by_70_images_2010_2017/MACD_Buy", "./70_by_70_images_2010_2017/no_MACD_Buy"]],
+
+         "test_images": [["./70_by_70_images_2018/BB_Buy/", "./70_by_70_images_2018/no_BB_Buy/"],
+         ["./70_by_70_images_2018/MACD_Buy/", "./70_by_70_images_2018/no_MACD_Buy/"]],
+
+        "out_dir": "./70_by_70_autoencoders",
+
+        "out_files": ["BB_Buy_autoencoder", "MACD_Buy_autoencoder"],
+
+        "img_shape": [70, 70],
+
+        "batch_size": 16,
+
+        "epochs": 50,
+
+        "early_iter": 5,
+
+        "early_tol": 1e-6,
+
+        "optim": "adam",
+
+        "optim_par": {},
+
+        "continue": "no",
+
+        "seed": 19900802
+}
+
+```
+
+* `train_images`: Nested list. Each inner list contains the path of the directories storing the images used for training. There must be as many inner lists as elements in `out_files`.
+
+* `tets_images`: Nested list. Each inner list contains the path of the directories storing the images used for testing. There must be as many inner lists as elements in `out_files`.
+
+* `out_dir`: String. Path of the directory where the models are saved.
+
+* `out_files`: List of strings. Name of the file storing each trained autoencoder. The length of this list must be equal to the length of each outter list in `train_images` and `test_images`.
+
+* `img_shape`: List of positive integers. Height and Width of the images.
+
+* `batch_size`: Poisitive integer. Batch size.
+
+* `epochs`: Positive integer. Number of epochs.
+
+* `early_iter`: Positive integer. Number of consecutive epochs without improvement in the test loss before stopping training a model.
+
+* `early_tol`: Float. Minimum difference in the test loss between two consecutive epochs to be considered as an improvement in the model.
+
+* `optim`: String. One of "adam" or "sgd". Optimizer to use.
+
+* `optim_par`: JSON object. Parameters for the optimizer (see pytorch documentation).
+
+* "continue": String. If "yes" then continue training a previously trained model. If "no", then the model is trained from the very beginning.
+
+* "seed": Positive integer. Seed (only for reproducibility purposes).
+
+<b style="color:MediumSeaGreen">Output</b>: Each file in `out_file` is a .pth created with `torch.save`. This file contains the following information
+
+  * `model_state_dict`: State dictionary of the model (basically model's parameters).
+  
+  * `optimizer_state_dict`: State dictionary of the optimizer
+  
+  * `epoch`: Last completed epoch before stopping training.
+  
+  * `prev_test_loss`: Best test lost up to and including `epoch`.
