@@ -224,3 +224,60 @@ The structure of file `config_train.json` is the following
 ---
 
 ## Step 5 - Make predictions
+
+After training the classifiers (see step 4), make predictions over test or validation images. For validations images it is assumed that we still have labels, for test images no labels are provided.
+
+To make predictions use python file `pred_classifier.py` together with the configuration file `config_pred.json`.
+
+In Windows using Anaconda powershell:
+
+```
+python.exe pred_classifier.py -f config_pred.json
+```
+
+The structure of the file `config_pred.json` is as follows
+
+```json
+{
+    "path_model":["./70_by_70_trained_classifiers/BB_Buy_classif.pth",
+    "./70_by_70_trained_classifiers/MACD_Buy_classif.pth",
+    "./70_by_70_trained_classifiers/RSI_Buy_classif.pth",
+    "./70_by_70_trained_classifiers/BB_Sell_classif.pth",
+    "./70_by_70_trained_classifiers/MACD_Sell_classif.pth",
+    "./70_by_70_trained_classifiers/RSI_Sell_classif.pth"],
+
+    "path_img": [["./70_by_70_images_2010_2017/BB_Buy/", "./70_by_70_images_2010_2017/no_BB_Buy/"],
+    ["./70_by_70_images_2010_2017/MACD_Buy/", "./70_by_70_images_2010_2017/no_MACD_Buy/"],
+    ["./70_by_70_images_2010_2017/RSI_Buy/", "./70_by_70_images_2010_2017/no_RSI_Buy/"],
+    ["./70_by_70_images_2010_2017/BB_Sell/", "./70_by_70_images_2010_2017/no_BB_Sell/"],
+    ["./70_by_70_images_2010_2017/MACD_Sell/", "./70_by_70_images_2010_2017/no_MACD_Sell/"],
+    ["./70_by_70_images_2010_2017/RSI_Sell/", "./70_by_70_images_2010_2017/no_RSI_Sell/"]],
+
+    "mode": "val",
+
+    "batch_size": 32,
+
+    "accept_lev": 0.5,
+
+    "out_dir":"./70_by_70_predictions_images_2010_2017"
+
+}
+```
+
+* `path_model`: List of strings. Path of the pth file containing the model.
+
+* `path_img`: Nested list. The $i$-th inner list contains the directory (or directories) storing the images to predict using the $i$-th model in `path_model`.
+
+* `mode`: String. one of `val` or `pred`.
+
+  * if `mode: "val"`, then validation mode is used. In this mode, the length of each inner list in `path_img` must be equal to two. The first element of each inner list must contain the path of the directory storing images from the positive class. Similarly, the second element of each inner list must contain the path of the directory storing images from the negative class.
+  
+  * if `mode: "pred"`, then prediction mode is used. In this mode, the length of each inner list is at least one. Each inner list contains path to directories storing images to classify.
+  
+  * `batch_size`: Positive integer. Batch size.
+  
+  * `accept_lev`: Float in [0, 1]. Minimum level of the predicted probability for an image to be considered a member of the possitive class.
+  
+  * `out_dir`: String. Path of the directory where the predictions are stored.
+
+<b style="color:MediumSeaGreen">Output</b>: For each model in `path_model` a csv file is created. The csv file contains the path of each classified image (column file), its predicted label (column precition) and, if `mode: "val"`, the true label (column truth) and a column specifying if the prediction was correct (column is_correct?).
