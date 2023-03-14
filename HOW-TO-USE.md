@@ -153,3 +153,74 @@ The structure of `config_image.json` is the following
   * `dpi`: Positive integer. Dots per inch.
 
 <b style="color:MediumSeaGreen">Output</b>: For each trigger in `triggers` two subdirectories in `out_dir` are created. One of them contains images the images for the positive class of the trigger. Similarly, the other subdirectory contains the images for the negative class of the triggers.
+
+<b style="color:Orange">Note</b>: This program might take a while in finishing, this depends on the number of triggers, the sample size and the number of labelled files.
+
+---
+
+## Step 4 - Train classifiers
+
+To train the classifiers using the images created in step 3 use the python file `train_classifier.py` together with the configuration file `config_train.json`.
+
+In Windows using Anaconda powershell:
+
+```
+python.exe train_classifier.py -f config_train.json
+```
+
+The structure of file `config_train.json` is the following
+
+```json
+{
+    "train_dir_pos": ["./70_by_70_images_2010_2017/BB_Buy",
+    "./70_by_70_images_2010_2017/MACD_Buy"],
+
+    "train_dir_neg": ["./70_by_70_images_2010_2017/no_BB_Buy",
+    "./70_by_70_images_2010_2017/no_MACD_Buy"],
+
+    "test_dir_pos": ["./70_by_70_images_2018/BB_Buy",
+    "./70_by_70_images_2018/MACD_Buy"],
+
+    "test_dir_neg": ["./70_by_70_images_2018/no_BB_Buy",
+    "./70_by_70_images_2018/no_MACD_Buy"],
+
+    "out_path": "./70_by_70_trained_classifiers",
+
+    "out_file": ["BB_Buy_classif", "MACD_Buy_classif"],
+
+    "adam_par": {"lr": 0.001, "betas": [0.9, 0.999], "eps":1e-08},
+    
+    "batch_size": 16,
+
+    "epochs": 50,
+
+    "accept_lev": 0.5,
+
+    "early": 5
+}
+```
+* `train_dir_pos`: List of strings. Directory where **training** images of the positive class are stored. One directory per model to train.
+
+* `train_dir_neg`: List of strings. Directory where **training** images of the negative class are stored. One directory per model to train.
+
+* `test_dir_pos`: List of strings. Directory where **test** images of the positive class are stored. One directory per model to train.
+
+* `test_dir_neg`: List of strings. Directory where **test** images of the negative class are stored. One directory per model to train.
+
+* `out_path`: String. Path of the directory where the trained models are stored.
+
+* `out_file`: List of strings. Name(s) of the file(s) storing the trained model(s).
+
+* `adam_par`: JSON object. Parameters for Adam optimizer (see pytorch documentation).
+
+* `batch_size`: Positive integer. Batch size.
+
+* `epochs`: Positive integer. Number of epochs.
+
+* `early`: Positive integer.
+
+<b style="color:MediumSeaGreen">Output</b>: one .pth file per element in `out_file` is created in `out_path`. This file contains the trained classifier.
+
+---
+
+## Step 5 - Make predictions
