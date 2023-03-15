@@ -61,4 +61,14 @@ class PredImageDataset(Dataset):
     def __getitem__(self, idx):
         image = self.image2tensor(self.files[idx])
         return image, self.files[idx]
-        
+
+class MaskedImageDataset(Dataset):
+
+    def __init__(self, masked_image: torch.Tensor):
+        self.images = masked_image
+
+    def __len__(self) -> int:
+        return self.images.shape[0]
+    
+    def __getitem__(self, idx):
+        return self.images[idx, :, :, :]
