@@ -6,10 +6,10 @@ import sklearn
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from utils import image2tensor
 from torch.utils.data import DataLoader
 from datasets import MaskedImageDataset
 from scipy.spatial.distance import cdist
+from utils import image2tensor, set_seed
 from sklearn.neighbors import NearestNeighbors
 
 
@@ -96,7 +96,7 @@ def get_sd_map(img_neighbor: torch.Tensor,
     
     # The normalization factors considers the number of times
     # a region is overlapped by a mask
-    norm = np.exp(-norm_factor)
+    norm = np.exp(-norm_factor/norm_factor.max())
     #norm = 1 / norm_factor
     
     
@@ -110,8 +110,8 @@ def get_sd_map(img_neighbor: torch.Tensor,
         end_row = e[0][1]
         start_col = e[1][0]
         end_col = e[1][1]
-        #mask[start_row:end_row, start_col:end_col] = norm[start_row:end_row, start_col:end_col]
-        mask[start_row:end_row, start_col:end_col] = 1.0
+        mask[start_row:end_row, start_col:end_col] = norm[start_row:end_row, start_col:end_col]
+        #mask[start_row:end_row, start_col:end_col] = 1.0
         sim_based_sm += mask * scaled_sim_importance_masked_regions[i]
         dissim_based_sm +=  mask * scaled_dissim_importance_masked_regions[i]
     
@@ -148,7 +148,7 @@ path_scaler = './70_by_70_pca/scaler_BB_Buy_autoencoder.pkl'
 num_query = 3
 
 # Type of prediction (True => right prediction, False => Wrong prediction)
-bool_type = True
+bool_type = False
 
 # Number of neighbors to compare with (neighbors come from training data)
 num_neighbors = 3
@@ -160,7 +160,7 @@ figsize = (40, 40)
 image_size = (70, 70)
 
 # Mask size
-mask_size = 8 # Need to think how to select this parameter
+mask_size = 12 # Need to think how to select this parameter
 
 # stride size
 stride = 3 # Need to think how to select this parameter
@@ -168,6 +168,16 @@ stride = 3 # Need to think how to select this parameter
 # Labels for positive/negative class
 lab_pos = 'Buy'
 lab_neg = 'No Buy'
+
+# Colormaps
+sim_col_map = 'BuGn'
+dis_col_map = 'YlOrRd'
+
+# Transparency
+alpha = 0.4
+
+# For reproducibility
+seed = 19900802
 # ---------------------END OF CONFIG FILE ------------------------
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -209,7 +219,11 @@ knn = NearestNeighbors(n_neighbors = num_neighbors)
 knn.fit(latent_train.iloc[:, 1:].to_numpy())
 fig, axs = plt.subplots(2 * num_query, num_neighbors + 1, figsize = figsize)
 
-# TO DO: Set seed
+# Color maps
+cmap_sim = plt.cm.get_cmap(sim_col_map).copy()
+cmap_dis = plt.cm.get_cmap(dis_col_map).copy()
+
+set_seed(seed)
 
 i = 0
 for idx in query_idx:
@@ -232,6 +246,10 @@ for idx in query_idx:
     dist = dist.reshape((dist.shape[1], ))
     idx_neighbors = idx_neighbors.reshape((idx_neighbors.shape[1], ))
     idx_neighbors = idx_neighbors[dist.argsort()[::-1]]
+    
+    # To aggregate (dis)similarities of neighbors
+    sim_agg = torch.zeros(image_size)
+    dis_agg = torch.zeros(image_size)
 
     # Plot row
     for j, idx_n in enumerate(idx_neighbors):
@@ -258,47 +276,46 @@ for idx in query_idx:
                                      model,
                                      pca,
                                      scaler)
+        
         # Avoid plotting background part
-        #sim_mask = np.ma.masked_greater(sim_map, 0)
-        #dis_mask = np.ma.masked_greater(dis_map, 0)
         sim_map = torch.from_numpy(sim_map)
-        sim_map = sim_map.unsqueeze(0).permute([1, 2, 0])
-        sim_map[sim_map == 0] = torch.nan
+        sim_agg += sim_map
+        sim_map[sim_map <= sim_map[sim_map > 0].quantile(0.1)] = torch.nan
         
         dis_map = torch.from_numpy(dis_map)
-        dis_map = dis_map.unsqueeze(0).permute([1, 2, 0])
-        dis_map[dis_map == 0] = torch.nan
+        dis_agg += dis_map
+        dis_map[dis_map <= dis_map[dis_map > 0].quantile(0.1)] = torch.nan
 
         # Plot neighbor image with similarity map
         img_neighbor = img_neighbor.permute([1, 2, 0])
         axs[i, j + 1].imshow(img_neighbor)
-        #axs[i, j + 1].imshow(sim_mask, alpha = 0.6, cmap = 'Greens')
-        axs[i, j + 1].imshow(sim_map, alpha = 0.6, cmap = 'Greens')
+        axs[i, j + 1].imshow(sim_map, alpha = alpha, cmap = cmap_sim)
         axs[i, j + 1].set_title(f'Pred: {pred_neighbor}\n True: {true_neighbor}')
         axs[i,j + 1].set_xticks([])
         axs[i,j + 1].set_yticks([])
         
         # Plot neighbor image with dissimilarity map
         axs[i + 1, j + 1].imshow(img_neighbor)
-        #axs[i + 1, j + 1].imshow(dis_mask, alpha = 0.6, cmap = 'Greens')
-        axs[i + 1, j + 1].imshow(dis_map, alpha = 0.6, cmap = 'Greens')
+        axs[i + 1, j + 1].imshow(dis_map, alpha = alpha, cmap = cmap_dis)
         axs[i + 1, j + 1].set_title('')
         axs[i + 1,j + 1].set_xticks([])
         axs[i + 1,j + 1].set_yticks([])
         
-    # Plot query image with similarity map
+    # Plot query image with aggregated similarity maps
+    sim_agg /= sim_agg.max()
+    sim_agg[sim_agg <= sim_agg[sim_agg > 0].quantile(0.1)] = torch.nan
     img_query = img_query.permute([1, 2, 0])
     axs[i, 0].imshow(img_query)
-    #axs[i, 0].imshow(sim_mask, alpha = 0.6, cmap = 'Greens')
-    axs[i, 0].imshow(sim_map, alpha = 0.6, cmap = 'Greens')
+    axs[i, 0].imshow(sim_agg, alpha = alpha, cmap = cmap_sim)
     axs[i, 0].set_title(f'Pred: {pred_query}\n True: {true_query}')
     axs[i, 0].set_xticks([])
     axs[i, 0].set_yticks([])
     
-    # Plot query image with dissimilarity map
+    # Plot query image with aggregated dissimilarity maps
+    dis_agg /= dis_agg.max()
+    dis_agg[dis_agg <= dis_agg[dis_agg > 0].quantile(0.1)] = torch.nan
     axs[i + 1, 0].imshow(img_query)
-    #axs[i + 1, 0].imshow(dis_mask, alpha = 0.6, cmap = 'Greens')
-    axs[i + 1, 0].imshow(dis_map, alpha = 0.6, cmap = 'Greens')
+    axs[i + 1, 0].imshow(dis_agg, alpha = alpha, cmap = cmap_dis)
     axs[i + 1, 0].set_title('')
     axs[i + 1, 0].set_xticks([])
     axs[i + 1, 0].set_yticks([])
