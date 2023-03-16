@@ -25,9 +25,10 @@ def mask_image(source_img: torch.Tensor, mask_size: int, stride: int):
             mask[i:min(i + mask_size, image_size[0]), j:min(j + mask_size, image_size[1])] = 0
 
             # Only consider masked images that do modify the source image
-            if not torch.all(mask * img_neighbor == img_neighbor):
-                masked_neighbor_image = torch.cat((masked_neighbor_image, (img_neighbor * mask).unsqueeze(0)), 0)
+            if not torch.all(mask * source_img == source_img):
+                masked_neighbor_image = torch.cat((masked_neighbor_image, (source_img * mask).unsqueeze(0)), 0)
                 non_normed_masks += 1 - mask # invert to get area that is masked, e.g. from [1, 1, 0, 1, 1] to [0, 0, 1, 0, 0]
+
     return masked_neighbor_image, non_normed_masks
 
 def get_latent_masks(model: resnet.ResNetAutoEncoder,
@@ -56,7 +57,7 @@ def get_latent_masks(model: resnet.ResNetAutoEncoder,
     return f_maps
 
 def get_sd_map(img_neighbor: torch.Tensor,
-               latent_neighbor: np.ndarray,
+               latent_query: np.ndarray,
                unmask_dist: float,
                mask_size: int,
                stride: int,
@@ -73,7 +74,7 @@ def get_sd_map(img_neighbor: torch.Tensor,
     # Compute distances between the latent representation of
     # source image (neighbor image) and the latent representation
     # of masked image
-    masked_distances = cdist(latent_neighbor[np.newaxis, :], latent_masks, metric = 'euclidean')[0]
+    masked_distances = cdist(latent_query[np.newaxis, :], latent_masks, metric = 'euclidean')[0]
     
     # Compute importance of masked regions
     sim_importance_masked_regions = [max(mask_dist - unmask_dist, 0) for mask_dist in masked_distances]
