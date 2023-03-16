@@ -18,19 +18,20 @@ def mask_image(source_img: torch.Tensor, mask_size: int, stride: int):
     image_size = source_img.shape[1:]
     non_normed_masks = torch.zeros(image_size) # Change name to norm_factor
     masked_neighbor_image = torch.Tensor() # Change name to masked_images
-
+    indices = []
     for i in range(0, image_size[0] - mask_size + 1, stride):
         for j in range(0, image_size[1] - mask_size + 1, stride):
             mask = torch.ones(image_size)
-            # [(start_row, end_row), (start_col, end_col)]
             mask[i:min(i + mask_size, image_size[0]), j:min(j + mask_size, image_size[1])] = 0
 
             # Only consider masked images that do modify the source image
             if not torch.all(mask * source_img == source_img):
+                # [(start_row, end_row), (start_col, end_col)]
+                indices.append([(i, min(i + mask_size, image_size[0])), (j,min(j + mask_size, image_size[1]))])
                 masked_neighbor_image = torch.cat((masked_neighbor_image, (source_img * mask).unsqueeze(0)), 0)
                 non_normed_masks += 1 - mask # invert to get area that is masked, e.g. from [1, 1, 0, 1, 1] to [0, 0, 1, 0, 0]
 
-    return masked_neighbor_image, non_normed_masks
+    return masked_neighbor_image, non_normed_masks, indices
 
 def get_latent_masks(model: resnet.ResNetAutoEncoder,
                      masked_neighbor_image: torch.Tensor,
@@ -64,12 +65,12 @@ def get_sd_map(img_neighbor: torch.Tensor,
                stride: int,
                model: resnet.ResNetAutoEncoder,
                pca: sklearn.decomposition.PCA,
-               scaler: sklearn.preprocessig.StandardScaler) -> (torch.Tensor, torch.Tensor):
+               scaler: sklearn.preprocessing.StandardScaler) -> (torch.Tensor, torch.Tensor):
     
     image_size = img_neighbor.shape[1:]
     
     # Make masked images
-    masked_image, norm_factor = mask_image(img_neighbor, mask_size, stride)
+    masked_image, norm_factor, idx_mask = mask_image(img_neighbor, mask_size, stride)
     
     # Get latent representations of each masked image
     latent_masks = get_latent_masks(model, masked_image, pca, scaler)
@@ -95,22 +96,30 @@ def get_sd_map(img_neighbor: torch.Tensor,
     
     # The normalization factors considers the number of times
     # a region is overlapped by a mask
-    norm_factor = np.exp(-norm_factor/norm_factor.max())
+    norm = np.exp(-norm_factor)
+    #norm = 1 / norm_factor
+    
     
     # Saliency Maps
     sim_based_sm = np.zeros(image_size)
     dissim_based_sm = np.zeros(image_size)
     
-    importance_counter = 0
-    for i in range(0, image_size[0] - mask_size + 1, stride):
-        for j in range(0, image_size[1] - mask_size + 1, stride):
-            #mask = np.zeros(image_size)
-            #mask[i:min(i + mask_size, image_size[0]), j:min(j + mask_size, image_size[1])] = norm_factor[i:min(i + mask_size, image_size[0]), j:min(j + mask_size, image_size[1])]
-            #sim_based_sm += mask * scaled_sim_importance_masked_regions[importance_counter]
-            #dissim_based_sm += mask * scaled_dissim_importance_masked_regions[importance_counter]
-            importance_counter += 1
-
-    return
+    for i, e in enumerate(idx_mask):
+        mask = np.zeros(image_size)
+        start_row = e[0][0]
+        end_row = e[0][1]
+        start_col = e[1][0]
+        end_col = e[1][1]
+        #mask[start_row:end_row, start_col:end_col] = norm[start_row:end_row, start_col:end_col]
+        mask[start_row:end_row, start_col:end_col] = 1.0
+        sim_based_sm += mask * scaled_sim_importance_masked_regions[i]
+        dissim_based_sm +=  mask * scaled_dissim_importance_masked_regions[i]
+    
+    # Normalize to [0, 1]
+    sim_based_sm /= sim_based_sm.max()
+    dissim_based_sm /= dissim_based_sm.max()
+    
+    return sim_based_sm, dissim_based_sm
 
 # ----------------------- CONFIG FILE -------------------------------------
 
@@ -136,16 +145,16 @@ path_pca = './70_by_70_pca/pca_BB_Buy_autoencoder.pkl'
 path_scaler = './70_by_70_pca/scaler_BB_Buy_autoencoder.pkl'
 
 # Number of query predictions from the test set to analyze
-num_query = 5
+num_query = 3
 
 # Type of prediction (True => right prediction, False => Wrong prediction)
-bool_type = False
+bool_type = True
 
 # Number of neighbors to compare with (neighbors come from training data)
-num_neighbors = 5
+num_neighbors = 3
 
 # Output Figure size
-figsize = (20, 20)
+figsize = (40, 40)
 
 # Image size
 image_size = (70, 70)
@@ -198,11 +207,12 @@ query_idx = np.random.choice(df_test_pred[df_test_pred['is_correct?'] == bool_ty
 # Fit nearest neighbors object
 knn = NearestNeighbors(n_neighbors = num_neighbors)
 knn.fit(latent_train.iloc[:, 1:].to_numpy())
-fig, axs = plt.subplots(num_query, num_neighbors + 1, figsize = figsize)
+fig, axs = plt.subplots(2 * num_query, num_neighbors + 1, figsize = figsize)
 
 # TO DO: Set seed
 
-for i, idx in enumerate(query_idx):
+i = 0
+for idx in query_idx:
     # Get query image from test set
     path_img_query = df_test_pred.iloc[idx, 0]
     str_aux_query = df_test_pred.iloc[idx, 0].split('/')[-1]
@@ -223,13 +233,6 @@ for i, idx in enumerate(query_idx):
     idx_neighbors = idx_neighbors.reshape((idx_neighbors.shape[1], ))
     idx_neighbors = idx_neighbors[dist.argsort()[::-1]]
 
-    # Plot query image
-    img_query = img_query.permute([1, 2, 0])
-    axs[i, 0].imshow(img_query)
-    axs[i, 0].set_title(f'Pred: {pred_query}\n True: {true_query}')
-    axs[i, 0].set_xticks([])
-    axs[i, 0].set_yticks([])
-    
     # Plot row
     for j, idx_n in enumerate(idx_neighbors):
         
@@ -245,19 +248,61 @@ for i, idx in enumerate(query_idx):
         img_neighbor = image2tensor(latent_train['file'][idx_n])
         latent_neighbor = latent_train.iloc[idx_n, 1:].to_numpy(dtype = np.float64)
         unmask_dist = np.sqrt(sum((latent_query - latent_neighbor)**2))
-        # TODO: Compute S/D Maps
         
-        # Plot neighbor image
+        # Compute S/D Maps
+        sim_map, dis_map = get_sd_map(img_neighbor,
+                                     latent_query,
+                                     unmask_dist,
+                                     mask_size,
+                                     stride,
+                                     model,
+                                     pca,
+                                     scaler)
+        # Avoid plotting background part
+        #sim_mask = np.ma.masked_greater(sim_map, 0)
+        #dis_mask = np.ma.masked_greater(dis_map, 0)
+        sim_map = torch.from_numpy(sim_map)
+        sim_map = sim_map.unsqueeze(0).permute([1, 2, 0])
+        sim_map[sim_map == 0] = torch.nan
+        
+        dis_map = torch.from_numpy(dis_map)
+        dis_map = dis_map.unsqueeze(0).permute([1, 2, 0])
+        dis_map[dis_map == 0] = torch.nan
+
+        # Plot neighbor image with similarity map
         img_neighbor = img_neighbor.permute([1, 2, 0])
         axs[i, j + 1].imshow(img_neighbor)
+        #axs[i, j + 1].imshow(sim_mask, alpha = 0.6, cmap = 'Greens')
+        axs[i, j + 1].imshow(sim_map, alpha = 0.6, cmap = 'Greens')
         axs[i, j + 1].set_title(f'Pred: {pred_neighbor}\n True: {true_neighbor}')
         axs[i,j + 1].set_xticks([])
         axs[i,j + 1].set_yticks([])
-#plt.subplots_adjust
+        
+        # Plot neighbor image with dissimilarity map
+        axs[i + 1, j + 1].imshow(img_neighbor)
+        #axs[i + 1, j + 1].imshow(dis_mask, alpha = 0.6, cmap = 'Greens')
+        axs[i + 1, j + 1].imshow(dis_map, alpha = 0.6, cmap = 'Greens')
+        axs[i + 1, j + 1].set_title('')
+        axs[i + 1,j + 1].set_xticks([])
+        axs[i + 1,j + 1].set_yticks([])
+        
+    # Plot query image with similarity map
+    img_query = img_query.permute([1, 2, 0])
+    axs[i, 0].imshow(img_query)
+    #axs[i, 0].imshow(sim_mask, alpha = 0.6, cmap = 'Greens')
+    axs[i, 0].imshow(sim_map, alpha = 0.6, cmap = 'Greens')
+    axs[i, 0].set_title(f'Pred: {pred_query}\n True: {true_query}')
+    axs[i, 0].set_xticks([])
+    axs[i, 0].set_yticks([])
+    
+    # Plot query image with dissimilarity map
+    axs[i + 1, 0].imshow(img_query)
+    #axs[i + 1, 0].imshow(dis_mask, alpha = 0.6, cmap = 'Greens')
+    axs[i + 1, 0].imshow(dis_map, alpha = 0.6, cmap = 'Greens')
+    axs[i + 1, 0].set_title('')
+    axs[i + 1, 0].set_xticks([])
+    axs[i + 1, 0].set_yticks([])
+    
+    i = i + 2
+
 plt.show()
-
-
-
-# For each masked image compute its feature maps (will need a dataloader and a model)
-# Then apply pca with the pca object learned from training data (use scaler too)
-# Compute distances between query embedding and masked embeddings
