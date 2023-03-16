@@ -291,15 +291,15 @@ for idx in query_idx:
         axs[i, j + 1].imshow(img_neighbor)
         axs[i, j + 1].imshow(sim_map, alpha = alpha, cmap = cmap_sim)
         axs[i, j + 1].set_title(f'Pred: {pred_neighbor}\n True: {true_neighbor}')
-        axs[i,j + 1].set_xticks([])
-        axs[i,j + 1].set_yticks([])
+        axs[i, j + 1].set_xticks([])
+        axs[i, j + 1].set_yticks([])
         
         # Plot neighbor image with dissimilarity map
         axs[i + 1, j + 1].imshow(img_neighbor)
         axs[i + 1, j + 1].imshow(dis_map, alpha = alpha, cmap = cmap_dis)
-        axs[i + 1, j + 1].set_title('')
-        axs[i + 1,j + 1].set_xticks([])
-        axs[i + 1,j + 1].set_yticks([])
+        axs[i + 1, j + 1].set_title(f'Pred: {pred_neighbor}\n True: {true_neighbor}')
+        axs[i + 1, j + 1].set_xticks([])
+        axs[i + 1, j + 1].set_yticks([])
         
     # Plot query image with aggregated similarity maps
     sim_agg /= sim_agg.max()
@@ -316,7 +316,7 @@ for idx in query_idx:
     dis_agg[dis_agg <= dis_agg[dis_agg > 0].quantile(0.1)] = torch.nan
     axs[i + 1, 0].imshow(img_query)
     axs[i + 1, 0].imshow(dis_agg, alpha = alpha, cmap = cmap_dis)
-    axs[i + 1, 0].set_title('')
+    axs[i + 1, 0].set_title(f'Pred: {pred_query}\n True: {true_query}')
     axs[i + 1, 0].set_xticks([])
     axs[i + 1, 0].set_yticks([])
     
