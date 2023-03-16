@@ -22,6 +22,7 @@ def mask_image(source_img: torch.Tensor, mask_size: int, stride: int):
     for i in range(0, image_size[0] - mask_size + 1, stride):
         for j in range(0, image_size[1] - mask_size + 1, stride):
             mask = torch.ones(image_size)
+            # [(start_row, end_row), (start_col, end_col)]
             mask[i:min(i + mask_size, image_size[0]), j:min(j + mask_size, image_size[1])] = 0
 
             # Only consider masked images that do modify the source image
@@ -65,6 +66,8 @@ def get_sd_map(img_neighbor: torch.Tensor,
                pca: sklearn.decomposition.PCA,
                scaler: sklearn.preprocessig.StandardScaler) -> (torch.Tensor, torch.Tensor):
     
+    image_size = img_neighbor.shape[1:]
+    
     # Make masked images
     masked_image, norm_factor = mask_image(img_neighbor, mask_size, stride)
     
@@ -72,8 +75,8 @@ def get_sd_map(img_neighbor: torch.Tensor,
     latent_masks = get_latent_masks(model, masked_image, pca, scaler)
     
     # Compute distances between the latent representation of
-    # source image (neighbor image) and the latent representation
-    # of masked image
+    # query image and the latent representation
+    # of masked versions of the neighbor image
     masked_distances = cdist(latent_query[np.newaxis, :], latent_masks, metric = 'euclidean')[0]
     
     # Compute importance of masked regions
@@ -83,7 +86,29 @@ def get_sd_map(img_neighbor: torch.Tensor,
     # Similarity
     min_imp = min(sim_importance_masked_regions)
     max_imp = max(sim_importance_masked_regions)
-    scaled_sim_importance_masked_regions = np.array([(f-min_imp) / (max_imp - min_imp) * 255 for f in sim_importance_masked_regions])
+    scaled_sim_importance_masked_regions = np.array([(f-min_imp) / (max_imp - min_imp)  for f in sim_importance_masked_regions])
+    
+    # Dissimilarity
+    min_imp = min(dissim_importance_masked_regions)
+    max_imp = max(dissim_importance_masked_regions)
+    scaled_dissim_importance_masked_regions = np.array([(f-min_imp) / (max_imp - min_imp)  for f in dissim_importance_masked_regions])
+    
+    # The normalization factors considers the number of times
+    # a region is overlapped by a mask
+    norm_factor = np.exp(-norm_factor/norm_factor.max())
+    
+    # Saliency Maps
+    sim_based_sm = np.zeros(image_size)
+    dissim_based_sm = np.zeros(image_size)
+    
+    importance_counter = 0
+    for i in range(0, image_size[0] - mask_size + 1, stride):
+        for j in range(0, image_size[1] - mask_size + 1, stride):
+            #mask = np.zeros(image_size)
+            #mask[i:min(i + mask_size, image_size[0]), j:min(j + mask_size, image_size[1])] = norm_factor[i:min(i + mask_size, image_size[0]), j:min(j + mask_size, image_size[1])]
+            #sim_based_sm += mask * scaled_sim_importance_masked_regions[importance_counter]
+            #dissim_based_sm += mask * scaled_dissim_importance_masked_regions[importance_counter]
+            importance_counter += 1
 
     return
 
