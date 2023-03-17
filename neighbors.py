@@ -37,7 +37,7 @@ path_pca = './70_by_70_pca/pca_BB_Buy_autoencoder.pkl'
 path_scaler = './70_by_70_pca/scaler_BB_Buy_autoencoder.pkl'
 
 # Number of query predictions from the test set to analyze
-num_query = 2
+num_query = 4
 
 # Type of prediction (True => right prediction, False => Wrong prediction)
 bool_type = False
@@ -46,7 +46,10 @@ bool_type = False
 num_neighbors = 5
 
 # Output Figure size
-figsize = (40, 40)
+figsize = (100, 100)
+
+# DPI
+dpi = 300
 
 # Image size
 image_size = (70, 70)
@@ -67,6 +70,12 @@ dis_col_map = 'YlOrRd'
 
 # Transparency
 alpha = 0.4
+
+# Path where to store the results
+out_path = './70_by_70_sd_maps'
+
+# name of the file with the output
+out_file = 'sd_map'
 
 # For reproducibility
 seed = 4
@@ -232,13 +241,22 @@ query_idx = np.random.choice(df_test_pred[df_test_pred['is_correct?'] == bool_ty
 # Fit nearest neighbors object
 knn = NearestNeighbors(n_neighbors = num_neighbors)
 knn.fit(latent_train.iloc[:, 1:].to_numpy())
+
+# To control plots
+plt.ioff()
 fig, axs = plt.subplots(2 * num_query, num_neighbors + 1, figsize = figsize)
+
 
 # Color maps
 cmap_sim = plt.cm.get_cmap(sim_col_map).copy()
 cmap_dis = plt.cm.get_cmap(dis_col_map).copy()
 
+# Set seed (for reproducibility)
 set_seed(seed)
+
+# Create output directory
+if not os.path.exists(out_path):
+    os.mkdir(out_path)
 
 i = 0
 for idx in query_idx:
@@ -369,4 +387,10 @@ for idx in query_idx:
     
     i = i + 2
 
-plt.show()
+plt.savefig(os.path.join(out_path, f'{out_file}.png'),
+           dpi = dpi,
+           backend = 'Agg',
+           facecolor = 'white')
+plt.close()
+plt.ion()
+print(f' {"=" * 25} Image created {"=" * 25}')
