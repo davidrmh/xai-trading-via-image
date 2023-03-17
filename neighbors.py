@@ -69,7 +69,7 @@ dis_col_map = 'YlOrRd'
 alpha = 0.4
 
 # For reproducibility
-seed = 19900802
+seed = 4
 # ---------------------END OF CONFIG FILE ------------------------
 
 
@@ -85,7 +85,7 @@ def overall_level(list_maps: list) -> float:
     # Normalize to [0, 1]
     sum_map /= sum_map.max()
     
-    return sum_map.sum()
+    return sum_map[sum_map > 0].mean()
 
 def mask_image(source_img: torch.Tensor, mask_size: int, stride: int):
 
