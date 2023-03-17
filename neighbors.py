@@ -3,6 +3,7 @@ import pickle
 import torch
 import resnet
 import sklearn
+import copy as cp
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -12,6 +13,19 @@ from scipy.spatial.distance import cdist
 from utils import image2tensor, set_seed
 from sklearn.neighbors import NearestNeighbors
 
+def overall_level(list_maps: list) -> float:
+    if len(list_maps) == 0:
+        return 0.0
+    sum_map = np.zeros_like(list_maps[0])
+    
+    # Aggregate (dis)similarity maps
+    for m in list_maps:
+        sum_map += m
+    
+    # Normalize to [0, 1]
+    sum_map /= sum_map.max()
+    
+    return sum_map.sum()
 
 def mask_image(source_img: torch.Tensor, mask_size: int, stride: int):
 
@@ -145,13 +159,13 @@ path_pca = './70_by_70_pca/pca_BB_Buy_autoencoder.pkl'
 path_scaler = './70_by_70_pca/scaler_BB_Buy_autoencoder.pkl'
 
 # Number of query predictions from the test set to analyze
-num_query = 3
+num_query = 2
 
 # Type of prediction (True => right prediction, False => Wrong prediction)
 bool_type = False
 
 # Number of neighbors to compare with (neighbors come from training data)
-num_neighbors = 3
+num_neighbors = 5
 
 # Output Figure size
 figsize = (40, 40)
@@ -250,6 +264,20 @@ for idx in query_idx:
     # To aggregate (dis)similarities of neighbors
     sim_agg = torch.zeros(image_size)
     dis_agg = torch.zeros(image_size)
+    
+    # To compute overall level of (dis)agreement
+    # according to neighbors and their predictions
+    list_sim_same = []
+    list_sim_dif = []
+    list_dis_same = []
+    list_dis_dif = []
+    
+    # To store overall level of (dis)agreement
+    ola_same = 0.0 # Overall level of agreement for neighbors with same predicted label as query image
+    old_same = 0.0 # Overall level of disagreement for neighbors with same predicted label as query image
+    ola_dif = 0.0 # Overall level of agreement for neighbors with different predicted label as query image
+    old_dif = 0.0 # Overall level of disagreement for neighbors with different predicted label as query image
+    
 
     # Plot row
     for j, idx_n in enumerate(idx_neighbors):
@@ -277,7 +305,17 @@ for idx in query_idx:
                                      pca,
                                      scaler)
         
-        # Avoid plotting background part
+        # Store in corresponding lists in order to compute the
+        # overall level of (dis)agreement.
+        # Copy is needed since later the maps are modified
+        if pred_query == pred_neighbor:
+            list_sim_same.append(cp.copy(sim_map))
+            list_dis_same.append(cp.copy(dis_map))
+        else:
+            list_sim_dif.append(cp.copy(sim_map))
+            list_dis_dif.append(cp.copy(dis_map))
+        
+        # Make plots for neighbors
         sim_map = torch.from_numpy(sim_map)
         sim_agg += sim_map
         sim_map[sim_map <= sim_map[sim_map > 0].quantile(0.1)] = torch.nan
@@ -300,7 +338,13 @@ for idx in query_idx:
         axs[i + 1, j + 1].set_title(f'Pred: {pred_neighbor}\n True: {true_neighbor}')
         axs[i + 1, j + 1].set_xticks([])
         axs[i + 1, j + 1].set_yticks([])
-        
+    
+    # Compute overall level of (dis)agreement
+    ola_same = overall_level(list_sim_same)
+    old_same = overall_level(list_dis_same)
+    ola_dif = overall_level(list_sim_dif)
+    old_dif = overall_level(list_dis_dif)
+    
     # Plot query image with aggregated similarity maps
     sim_agg /= sim_agg.max()
     sim_agg[sim_agg <= sim_agg[sim_agg > 0].quantile(0.1)] = torch.nan
@@ -308,6 +352,7 @@ for idx in query_idx:
     axs[i, 0].imshow(img_query)
     axs[i, 0].imshow(sim_agg, alpha = alpha, cmap = cmap_sim)
     axs[i, 0].set_title(f'Pred: {pred_query}\n True: {true_query}')
+    axs[i, 0].set_xlabel(f'OLA_D:{ola_dif:.4f} \n OLA_S: {ola_same:.4f}')
     axs[i, 0].set_xticks([])
     axs[i, 0].set_yticks([])
     
@@ -317,6 +362,7 @@ for idx in query_idx:
     axs[i + 1, 0].imshow(img_query)
     axs[i + 1, 0].imshow(dis_agg, alpha = alpha, cmap = cmap_dis)
     axs[i + 1, 0].set_title(f'Pred: {pred_query}\n True: {true_query}')
+    axs[i + 1, 0].set_xlabel(f'OLD_D: {old_dif:.4f} \n OLD_S: {old_same:.4f}')
     axs[i + 1, 0].set_xticks([])
     axs[i + 1, 0].set_yticks([])
     
