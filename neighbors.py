@@ -13,6 +13,66 @@ from scipy.spatial.distance import cdist
 from utils import image2tensor, set_seed
 from sklearn.neighbors import NearestNeighbors
 
+# ----------------------- CONFIG FILE -------------------------------------
+
+# File containing the predictions from a classifier over the training set
+train_pred_file = "./70_by_70_predictions_images_2010_2017/pred_BB_Buy_classif.csv"
+
+# File containing the predictions from a classifier over the test set
+test_pred_file = "./70_by_70_predictions_images_2018/pred_BB_Buy_classif.csv"
+
+# File containing the latent representations of the images in the train set
+train_lat_file = "./70_by_70_pca/train_pca_BB_Buy_autoencoder.pkl"
+
+# File containing the latent representations of the images in the test set
+test_lat_file = "./70_by_70_pca/test_pca_BB_Buy_autoencoder.pkl"
+
+# File containing the path of a trained autoencoder
+path_autoencoder = './70_by_70_autoencoders/BB_Buy_autoencoder.pth'
+
+# File containing a PCA object trained with the training images
+path_pca = './70_by_70_pca/pca_BB_Buy_autoencoder.pkl'
+
+# File containing the scaler used to train the PCA
+path_scaler = './70_by_70_pca/scaler_BB_Buy_autoencoder.pkl'
+
+# Number of query predictions from the test set to analyze
+num_query = 2
+
+# Type of prediction (True => right prediction, False => Wrong prediction)
+bool_type = False
+
+# Number of neighbors to compare with (neighbors come from training data)
+num_neighbors = 5
+
+# Output Figure size
+figsize = (40, 40)
+
+# Image size
+image_size = (70, 70)
+
+# Mask size
+mask_size = 12 # Need to think how to select this parameter
+
+# stride size
+stride = 3 # Need to think how to select this parameter
+
+# Labels for positive/negative class
+lab_pos = 'Buy'
+lab_neg = 'No Buy'
+
+# Colormaps
+sim_col_map = 'BuGn'
+dis_col_map = 'YlOrRd'
+
+# Transparency
+alpha = 0.4
+
+# For reproducibility
+seed = 19900802
+# ---------------------END OF CONFIG FILE ------------------------
+
+
 def overall_level(list_maps: list) -> float:
     if len(list_maps) == 0:
         return 0.0
@@ -134,65 +194,6 @@ def get_sd_map(img_neighbor: torch.Tensor,
     dissim_based_sm /= dissim_based_sm.max()
     
     return sim_based_sm, dissim_based_sm
-
-# ----------------------- CONFIG FILE -------------------------------------
-
-# File containing the predictions from a classifier over the training set
-train_pred_file = "./70_by_70_predictions_images_2010_2017/pred_BB_Buy_classif.csv"
-
-# File containing the predictions from a classifier over the test set
-test_pred_file = "./70_by_70_predictions_images_2018/pred_BB_Buy_classif.csv"
-
-# File containing the latent representations of the images in the train set
-train_lat_file = "./70_by_70_pca/train_pca_BB_Buy_autoencoder.pkl"
-
-# File containing the latent representations of the images in the test set
-test_lat_file = "./70_by_70_pca/test_pca_BB_Buy_autoencoder.pkl"
-
-# File containing the path of a trained autoencoder
-path_autoencoder = './70_by_70_autoencoders/BB_Buy_autoencoder.pth'
-
-# File containing a PCA object trained with the training images
-path_pca = './70_by_70_pca/pca_BB_Buy_autoencoder.pkl'
-
-# File containing the scaler used to train the PCA
-path_scaler = './70_by_70_pca/scaler_BB_Buy_autoencoder.pkl'
-
-# Number of query predictions from the test set to analyze
-num_query = 2
-
-# Type of prediction (True => right prediction, False => Wrong prediction)
-bool_type = False
-
-# Number of neighbors to compare with (neighbors come from training data)
-num_neighbors = 5
-
-# Output Figure size
-figsize = (40, 40)
-
-# Image size
-image_size = (70, 70)
-
-# Mask size
-mask_size = 12 # Need to think how to select this parameter
-
-# stride size
-stride = 3 # Need to think how to select this parameter
-
-# Labels for positive/negative class
-lab_pos = 'Buy'
-lab_neg = 'No Buy'
-
-# Colormaps
-sim_col_map = 'BuGn'
-dis_col_map = 'YlOrRd'
-
-# Transparency
-alpha = 0.4
-
-# For reproducibility
-seed = 19900802
-# ---------------------END OF CONFIG FILE ------------------------
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
