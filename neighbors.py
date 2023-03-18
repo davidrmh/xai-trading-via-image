@@ -37,7 +37,7 @@ path_pca = './70_by_70_pca/pca_BB_Buy_autoencoder.pkl'
 path_scaler = './70_by_70_pca/scaler_BB_Buy_autoencoder.pkl'
 
 # Number of query predictions from the test set to analyze
-num_query = 4
+num_query = 2
 
 # Type of prediction (True => right prediction, False => Wrong prediction)
 bool_type = False
@@ -46,16 +46,16 @@ bool_type = False
 num_neighbors = 5
 
 # Output Figure size
-figsize = (100, 100)
+figsize = (7, 7)
 
 # DPI
-dpi = 300
+dpi = 600
 
 # Image size
 image_size = (70, 70)
 
 # Mask size
-mask_size = 12 # Need to think how to select this parameter
+mask_size = 10 # Need to think how to select this parameter
 
 # stride size
 stride = 3 # Need to think how to select this parameter
@@ -75,10 +75,10 @@ alpha = 0.4
 out_path = './70_by_70_sd_maps'
 
 # name of the file with the output
-out_file = 'sd_map'
+out_file = 'sd_map8'
 
 # For reproducibility
-seed = 4
+seed = 86
 # ---------------------END OF CONFIG FILE ------------------------
 
 
@@ -347,14 +347,14 @@ for idx in query_idx:
         img_neighbor = img_neighbor.permute([1, 2, 0])
         axs[i, j + 1].imshow(img_neighbor)
         axs[i, j + 1].imshow(sim_map, alpha = alpha, cmap = cmap_sim)
-        axs[i, j + 1].set_title(f'Pred: {pred_neighbor}\n True: {true_neighbor}')
+        axs[i, j + 1].set_title(f'Pred: {pred_neighbor}\n True: {true_neighbor}', fontsize=5)
         axs[i, j + 1].set_xticks([])
         axs[i, j + 1].set_yticks([])
         
         # Plot neighbor image with dissimilarity map
         axs[i + 1, j + 1].imshow(img_neighbor)
         axs[i + 1, j + 1].imshow(dis_map, alpha = alpha, cmap = cmap_dis)
-        axs[i + 1, j + 1].set_title(f'Pred: {pred_neighbor}\n True: {true_neighbor}')
+        axs[i + 1, j + 1].set_title(f'Pred: {pred_neighbor}\n True: {true_neighbor}', fontsize=5)
         axs[i + 1, j + 1].set_xticks([])
         axs[i + 1, j + 1].set_yticks([])
     
@@ -370,8 +370,8 @@ for idx in query_idx:
     img_query = img_query.permute([1, 2, 0])
     axs[i, 0].imshow(img_query)
     axs[i, 0].imshow(sim_agg, alpha = alpha, cmap = cmap_sim)
-    axs[i, 0].set_title(f'Pred: {pred_query}\n True: {true_query}')
-    axs[i, 0].set_xlabel(f'OLA_D:{ola_dif:.4f} \n OLA_S: {ola_same:.4f}')
+    axs[i, 0].set_title(f'Pred: {pred_query}\n True: {true_query}', fontsize=5)
+    axs[i, 0].set_xlabel(f'OLA_D:{ola_dif:.4f} \n OLA_S: {ola_same:.4f}', fontsize=5)
     axs[i, 0].set_xticks([])
     axs[i, 0].set_yticks([])
     
@@ -380,17 +380,19 @@ for idx in query_idx:
     dis_agg[dis_agg <= dis_agg[dis_agg > 0].quantile(0.1)] = torch.nan
     axs[i + 1, 0].imshow(img_query)
     axs[i + 1, 0].imshow(dis_agg, alpha = alpha, cmap = cmap_dis)
-    axs[i + 1, 0].set_title(f'Pred: {pred_query}\n True: {true_query}')
-    axs[i + 1, 0].set_xlabel(f'OLD_D: {old_dif:.4f} \n OLD_S: {old_same:.4f}')
+    axs[i + 1, 0].set_title(f'Pred: {pred_query}\n True: {true_query}', fontsize = 5)
+    axs[i + 1, 0].set_xlabel(f'OLD_D: {old_dif:.4f} \n OLD_S: {old_same:.4f}', fontsize = 5)
     axs[i + 1, 0].set_xticks([])
     axs[i + 1, 0].set_yticks([])
     
     i = i + 2
-
+fig.tight_layout()
+plt.subplots_adjust(wspace=0.1)
 plt.savefig(os.path.join(out_path, f'{out_file}.png'),
-           dpi = dpi,
            backend = 'Agg',
-           facecolor = 'white')
+           facecolor = 'white',
+           dpi = dpi,
+           transparent = True)
 plt.close()
 plt.ion()
 print(f' {"=" * 25} Image created {"=" * 25}')
