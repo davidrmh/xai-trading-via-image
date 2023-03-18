@@ -130,7 +130,7 @@ The structure of `config_image.json` is the following
 
 * `out_dir`: String. Path of the directory storing the images.
 
-* `sample_size`: Positive integer. Number of images in the positive and negative class for each signal (trigger) and each file in `path_labels`. If set to 0, then for each trigger all the images corresponding to the positive class (relative to the trigger) as well as same number of images in the negative class. Using this parameter we can ensure we always have balanced datasets.
+* `sample_size`: Positive integer. Number of images to be created in the positive and negative class for each signal (trigger) and each file in `path_labels`. If set to 0, then for each trigger all the images corresponding to the positive class (relative to the trigger) as well as same number of images in the negative class are created. Using this parameter we can ensure we always have balanced datasets. **Suggested value**: 10
 
 * `bb_w`: Positive integer. Size of the lookback window for triggers related to Bollinger Bands. Ideally it should be the same value as the one used for `window` in the file `config_labels.json` in Step 2 for Bollinger bands.
 
@@ -364,3 +364,6 @@ The structure of the file `config_autoencoders.json` is the following
   * `epoch`: Last completed epoch before stopping training.
   
   * `prev_test_loss`: Best test lost up to and including `epoch`.
+
+## Step 7 - Compute PCA (latent) representations
+
