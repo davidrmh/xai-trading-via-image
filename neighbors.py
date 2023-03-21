@@ -65,11 +65,11 @@ lab_pos = 'Buy'
 lab_neg = 'No Buy'
 
 # Colormaps
-sim_col_map = 'cool'
-dis_col_map = 'YlOrRd'
+sim_col_map = 'Greens'
+dis_col_map = 'Reds'
 
 # Transparency
-alpha = 0.9
+alpha = 0.4
 
 # Path where to store the results
 out_path = './70_by_70_sd_maps'
@@ -155,12 +155,12 @@ def get_regions(unmask_dist: float,
         # Similarity region
         if d >= unmask_dist:
             sim_regions.append(idx_mask[i])
-            sim_contrib.append(d)
+            sim_contrib.append(d - unmask_dist)
         
         # Dissimilarity region
         else:
             dis_regions.append(idx_mask[i])
-            dis_contrib.append(d)
+            dis_contrib.append(unmask_dist - d)
     
     # Compute contributions
     if len(sim_contrib) > 0:
@@ -184,8 +184,6 @@ def get_sd_map(img_neighbor: torch.Tensor,
                pca: sklearn.decomposition.PCA,
                scaler: sklearn.preprocessing.StandardScaler) -> (torch.Tensor, torch.Tensor):
     
-    image_size = img_neighbor.shape[1:]
-    
     # Make masked images
     masked_image, factor_f, idx_mask = mask_image(img_neighbor, mask_size, stride)
     
@@ -202,7 +200,7 @@ def get_sd_map(img_neighbor: torch.Tensor,
     
     # Saliency Maps
     sim_map = torch.zeros_like(img_neighbor)
-    dis_map = np.zeros(image_size)
+    dis_map = torch.zeros_like(img_neighbor)
     
     # Similarity map
     for i, e in enumerate(sim_regions):
@@ -213,19 +211,22 @@ def get_sd_map(img_neighbor: torch.Tensor,
         
         # aux is used to only consider part of img_neighbor that is not background
         img_neighbor_region = img_neighbor[:, start_row:end_row, start_col:end_col]
-        aux = torch.zeros_like(img_neighbor_region)
-        aux[img_neighbor_region > 0] = 1.0
+        #aux = torch.zeros_like(img_neighbor_region)
+        #aux[img_neighbor_region > 0] = 1.0
+        aux = torch.ones_like(img_neighbor_region) # To use the unfocused version
         
         # Factor to consider overlapping masks
         # factor = np.exp(- factor_f[start_row:end_row, start_col:end_col] / factor_f[start_row:end_row, start_col:end_col].max())
         factor = 1 / factor_f[start_row:end_row, start_col:end_col]
         factor = factor.reshape((1, *factor.shape))
         sim_map[:, start_row:end_row, start_col:end_col] = sim_contrib[i] * factor * aux + sim_map[:, start_row:end_row, start_col:end_col]
-    #sim_map = sim_map.sum(axis = 0).numpy()
-    sim_map[0][sim_map[0] > 0] = 1
-    sim_map[1][sim_map[1] > 0] = 1
-    sim_map[2] = 0
+        
+    #sim_map[0][sim_map[0] > 0] = 1
+    #sim_map[1][sim_map[1] > 0] = 1
+    #sim_map[2] = 0
     sim_map = sim_map.permute([1,2,0]).numpy()
+    sim_map = sim_map.mean(axis = 2) # To use Colormaps the shape must be (H, W)
+    
 
     # Dissimilarity map
     for i, e in enumerate(dis_regions):
@@ -233,9 +234,24 @@ def get_sd_map(img_neighbor: torch.Tensor,
         end_row = e[0][1]
         start_col = e[1][0]
         end_col = e[1][1]
-        #factor = np.exp(- factor_f[start_row:end_row, start_col:end_col] / factor_f[start_row:end_row, start_col:end_col].max())
+        
+        # aux is used to only consider part of img_neighbor that is not background
+        img_neighbor_region = img_neighbor[:, start_row:end_row, start_col:end_col]
+        #aux = torch.zeros_like(img_neighbor_region)
+        #aux[img_neighbor_region > 0] = 1.0
+        aux = torch.ones_like(img_neighbor_region) # To use the unfocused version
+        
+        # Factor to consider overlapping masks
+        # factor = np.exp(- factor_f[start_row:end_row, start_col:end_col] / factor_f[start_row:end_row, start_col:end_col].max())
         factor = 1 / factor_f[start_row:end_row, start_col:end_col]
-        dis_map[start_row:end_row, start_col:end_col] = dis_contrib[i] * factor + dis_map[start_row:end_row, start_col:end_col]
+        factor = factor.reshape((1, *factor.shape))
+        dis_map[:, start_row:end_row, start_col:end_col] = dis_contrib[i] * factor * aux + dis_map[:, start_row:end_row, start_col:end_col]
+        
+    #dis_map[0][dis_map[0] > 0] = 1
+    #dis_map[1][dis_map[1] > 0] = 1
+    #dis_map[2] = 0
+    dis_map = dis_map.permute([1,2,0]).numpy()
+    dis_map = dis_map.mean(axis = 2) # To use Colormaps the shape must be (H, W)
     
     return sim_map, dis_map
 
@@ -374,67 +390,69 @@ for idx in query_idx:
         # Store in corresponding lists in order to compute the
         # overall level of (dis)agreement.
         # Copy is needed since later the maps are modified
-        if pred_query == pred_neighbor:
-            list_sim_same.append(cp.copy(sim_map))
-            list_dis_same.append(cp.copy(dis_map))
-        else:
-            list_sim_dif.append(cp.copy(sim_map))
-            list_dis_dif.append(cp.copy(dis_map))
+        #if pred_query == pred_neighbor:
+        #    list_sim_same.append(cp.deepcopy(sim_map))
+        #    list_dis_same.append(cp.deepcopy(dis_map))
+        #else:
+        #    list_sim_dif.append(cp.deepcopy(sim_map))
+        #    list_dis_dif.append(cp.deepcopy(dis_map))
         
         # Make plots for neighbors
-        sim_map = torch.from_numpy(sim_map)
+        #sim_map = torch.from_numpy(sim_map)
         #sim_agg += sim_map
-        sim_map[sim_map == 0] = torch.nan
+        sim_map[sim_map == 0.0] = torch.nan
         
-        dis_map = torch.from_numpy(dis_map)
-        dis_agg += dis_map
+        #dis_map = torch.from_numpy(dis_map)
+        #dis_agg += dis_map
         dis_map[dis_map == 0.0] = torch.nan
 
         # Plot neighbor image with similarity map
         img_neighbor = img_neighbor.permute([1, 2, 0])
-        axs[i, j + 1].imshow(img_neighbor)
-        axs[i, j + 1].imshow(sim_map, alpha = alpha, cmap = cmap_sim)
+        img_neighbor = img_neighbor.mean(axis = 2)
+        img_neighbor[img_neighbor == 0.0] = torch.nan
+        axs[i, j + 1].imshow(img_neighbor, cmap = 'PiYG_r')
+        axs[i, j + 1].imshow(sim_map, cmap = cmap_sim, alpha = alpha)
         axs[i, j + 1].set_title(f'Pred: {pred_neighbor}\n True: {true_neighbor}', fontsize=5)
         axs[i, j + 1].set_xticks([])
         axs[i, j + 1].set_yticks([])
         
         # Plot neighbor image with dissimilarity map
-        axs[i + 1, j + 1].imshow(img_neighbor)
-        axs[i + 1, j + 1].imshow(dis_map, alpha = alpha, cmap = cmap_dis,
-                                vmin = np.nanmin(dis_map),
-                                vmax = np.nanmax(dis_map))
+        axs[i + 1, j + 1].imshow(img_neighbor, cmap = 'PiYG_r')
+        axs[i + 1, j + 1].imshow(dis_map, cmap = cmap_dis, alpha = alpha)
         axs[i + 1, j + 1].set_title(f'Pred: {pred_neighbor}\n True: {true_neighbor}', fontsize=5)
         axs[i + 1, j + 1].set_xticks([])
         axs[i + 1, j + 1].set_yticks([])
     
     # Compute overall level of (dis)agreement
-    ola_same = overall_level(list_sim_same)
-    old_same = overall_level(list_dis_same)
-    ola_dif = overall_level(list_sim_dif)
-    old_dif = overall_level(list_dis_dif)
+    #ola_same = overall_level(list_sim_same)
+    #old_same = overall_level(list_dis_same)
+    #ola_dif = overall_level(list_sim_dif)
+    #old_dif = overall_level(list_dis_dif)
     
     # Plot query image with aggregated similarity maps
     #sim_agg /= sim_agg.max()
     #sim_agg[sim_agg == 0.0] = torch.nan
     img_query = img_query.permute([1, 2, 0])
-    axs[i, 0].imshow(img_query)
+    img_query = img_query.mean(axis = 2)
+    img_query[img_query == 0.0] = torch.nan
+    axs[i, 0].imshow(img_query, cmap = 'PiYG_r')
     #axs[i, 0].imshow(sim_agg / num_neighbors, alpha = alpha, cmap = cmap_sim,
     #                vmin = np.nanmin(sim_agg / num_neighbors),
     #                vmax = np.nanmax(sim_agg / num_neighbors))
     axs[i, 0].set_title(f'Pred: {pred_query}\n True: {true_query}', fontsize=5)
-    axs[i, 0].set_xlabel(f'OLA_D:{ola_dif:.4f} \n OLA_S: {ola_same:.4f}', fontsize=5)
+    #axs[i, 0].set_xlabel(f'OLA_D:{ola_dif:.4f} \n OLA_S: {ola_same:.4f}', fontsize=5)
     axs[i, 0].set_xticks([])
     axs[i, 0].set_yticks([])
     
     # Plot query image with aggregated dissimilarity maps
     #dis_agg /= dis_agg.max()
-    dis_agg[dis_agg == 0.0] = torch.nan
-    axs[i + 1, 0].imshow(img_query)
+    #dis_agg[dis_agg == 0.0] = torch.nan
+    axs[i + 1, 0].imshow(img_query, cmap = 'PiYG_r')
     #axs[i + 1, 0].imshow(dis_agg / num_neighbors, alpha = alpha, cmap = cmap_dis,
     #                    vmin = np.nanmin(dis_agg / num_neighbors),
     #                    vmax = np.nanmin(dis_agg / num_neighbors))
     axs[i + 1, 0].set_title(f'Pred: {pred_query}\n True: {true_query}', fontsize = 5)
-    axs[i + 1, 0].set_xlabel(f'OLD_D: {old_dif:.4f} \n OLD_S: {old_same:.4f}', fontsize = 5)
+    #axs[i + 1, 0].set_xlabel(f'OLD_D: {old_dif:.4f} \n OLD_S: {old_same:.4f}', fontsize = 5)
     axs[i + 1, 0].set_xticks([])
     axs[i + 1, 0].set_yticks([])
     
