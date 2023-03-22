@@ -1,0 +1,23 @@
+{
+    "path_train_latent": ["./70_by_70_pca/train_pca_BB_Buy_autoencoder.pkl",
+                     "./70_by_70_pca/train_pca_MACD_Buy_autoencoder.pkl",
+                     "./70_by_70_pca/train_pca_RSI_Buy_autoencoder.pkl"],
+
+    "path_test_latent": ["./70_by_70_pca/test_pca_BB_Buy_autoencoder.pkl",
+                    "./70_by_70_pca/test_pca_MACD_Buy_autoencoder.pkl",
+                    "./70_by_70_pca/test_pca_MACD_Buy_autoencoder.pkl"],
+
+    "path_train_positive": ["./70_by_70_images_2010_2017/BB_Buy/",
+                       "./70_by_70_images_2010_2017/MACD_Buy/",
+                       "./70_by_70_images_2010_2017/RSI_Buy/"],
+
+    "path_test_positive": ["./70_by_70_images_2018/BB_Buy/",
+                      "./70_by_70_images_2018/MACD_Buy/",
+                      "./70_by_70_images_2018/RSI_Buy/"],
+
+    "out_dir": "./70_by_70_neighbors_pred/",
+
+    "out_file": ["BB_Buy_neigh-pred", "MACD_Buy_neigh-pred", "RSI_Buy_neigh-pred"],
+
+    "tau_step": 0.5
+}
