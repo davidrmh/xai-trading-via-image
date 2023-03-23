@@ -1,0 +1,26 @@
+{
+    "path_model":["./70_by_70_trained_classif_autoencoder/BB_Buy_classif.pth",
+    "./70_by_70_trained_classif_autoencoder/MACD_Buy_classif.pth",
+    "./70_by_70_trained_classif_autoencoder/RSI_Buy_classif.pth",
+    "./70_by_70_trained_classif_autoencoder/BB_Sell_classif.pth",
+    "./70_by_70_trained_classif_autoencoder/MACD_Sell_classif.pth",
+    "./70_by_70_trained_classif_autoencoder/RSI_Sell_classif.pth"],
+
+    "path_img": [["./70_by_70_images_2018/BB_Buy/", "./70_by_70_images_2018/no_BB_Buy/"],
+    ["./70_by_70_images_2018/MACD_Buy/", "./70_by_70_images_2018/no_MACD_Buy/"],
+    ["./70_by_70_images_2018/RSI_Buy/", "./70_by_70_images_2018/no_RSI_Buy/"],
+    ["./70_by_70_images_2018/BB_Sell/", "./70_by_70_images_2018/no_BB_Sell/"],
+    ["./70_by_70_images_2018/MACD_Sell/", "./70_by_70_images_2018/no_MACD_Sell/"],
+    ["./70_by_70_images_2018/RSI_Sell/", "./70_by_70_images_2018/no_RSI_Sell/"]],
+
+    "image_size": [70, 70],
+
+    "mode": "val",
+
+    "batch_size": 32,
+
+    "accept_lev": 0.5,
+
+    "out_dir":"./70_by_70_pred_classif_autoencoder_images_2018"
+
+}
