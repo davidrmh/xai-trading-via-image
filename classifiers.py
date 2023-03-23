@@ -44,7 +44,7 @@ class Classifier(nn.Module):
         x = self.sig(x)
         return x.flatten()
 
-    def test_acc(self, test_load, accept_lev = 0.5):
+    def test_performance(self, test_load, accept_lev = 0.5):
         self.train(False)
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         count_correct, total_count = 0.0, 0.0
@@ -142,16 +142,22 @@ class ClassifierAutoEncoder(nn.Module):
         
         return x_class.flatten(), x_recons
 
-    def test_acc(self, test_load, accept_lev = 0.5):
+    def test_performance(self, test_load, accept_lev = 0.5):
         self.train(False)
+        loss_metric = nn.MSELoss()
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         count_correct, total_count = 0.0, 0.0
+        recons_loss = 0.0
         for batch_im, batch_lab, _ in test_load:
             batch_im, batch_lab = batch_im.to(device), batch_lab.to(device)
             with torch.no_grad():
-                pred_lab = self(batch_im)
+                pred_lab, recons = self(batch_im)
+                # To compute test accuracy from classifier part
                 count_correct += ((pred_lab >= accept_lev) == batch_lab).sum().item()
                 total_count += batch_lab.shape[0]
+                
+                # Compute reconstruction loss
+                recons_loss = recons_loss + loss_metric(recons batch_im).item()
         test_accuracy = count_correct / total_count
         self.train(True)
         return test_accuracy
