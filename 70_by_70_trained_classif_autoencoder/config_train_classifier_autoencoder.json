@@ -1,0 +1,48 @@
+{
+    "train_dir_pos": ["./70_by_70_images_2010_2017/BB_Buy",
+    "./70_by_70_images_2010_2017/MACD_Buy",
+    "./70_by_70_images_2010_2017/RSI_Buy",
+    "./70_by_70_images_2010_2017/BB_Sell",
+    "./70_by_70_images_2010_2017/MACD_Sell",
+    "./70_by_70_images_2010_2017/RSI_Sell"],
+
+    "train_dir_neg": ["./70_by_70_images_2010_2017/no_BB_Buy",
+    "./70_by_70_images_2010_2017/no_MACD_Buy",
+    "./70_by_70_images_2010_2017/no_RSI_Buy",
+    "./70_by_70_images_2010_2017/no_BB_Sell",
+    "./70_by_70_images_2010_2017/no_MACD_Sell",
+    "./70_by_70_images_2010_2017/no_RSI_Sell"],
+
+    "test_dir_pos": ["./70_by_70_images_2018/BB_Buy",
+    "./70_by_70_images_2018/MACD_Buy",
+    "./70_by_70_images_2018/RSI_Buy",
+    "./70_by_70_images_2018/BB_Sell",
+    "./70_by_70_images_2018/MACD_Sell",
+    "./70_by_70_images_2018/RSI_Sell"],
+
+    "test_dir_neg": ["./70_by_70_images_2018/no_BB_Buy",
+    "./70_by_70_images_2018/no_MACD_Buy",
+    "./70_by_70_images_2018/no_RSI_Buy",
+    "./70_by_70_images_2018/no_BB_Sell",
+    "./70_by_70_images_2018/no_MACD_Sell",
+    "./70_by_70_images_2018/no_RSI_Sell"],
+
+    "out_path": "./70_by_70_trained_classif_autoencoder",
+
+    "out_file": ["BB_Buy_classif", "MACD_Buy_classif", "RSI_Buy_classif",
+    "BB_Sell_classif", "MACD_Sell_classif", "RSI_Sell_classif"],
+
+    "adam_par": {"lr": 0.001, "betas": [0.9, 0.999], "eps":1e-08},
+    
+    "batch_size": 32,
+
+    "epochs": 20,
+
+    "accept_lev": 0.5,
+
+    "early": 5,
+    
+    "image_size": [70, 70],
+
+    "seed": 54321
+}
