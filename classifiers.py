@@ -129,18 +129,18 @@ class ClassifierAutoEncoder(nn.Module):
         return x.shape[1]
 
         
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x, indices = self.encoder(x)
+    def forward(self, x: torch.Tensor):
+        x_latent, indices = self.encoder(x)
         
         # Transformations related to classifier
-        x_class = torch.flatten(x, start_dim = 1)
+        x_class = torch.flatten(x_latent, start_dim = 1)
         x_class = self.fc(x_class)
         x_class = self.sig(x_class)
         
         # Transformations related to reconstruction
-        x_recons = self.decoder(x, indices)
+        x_recons = self.decoder(x_latent, indices)
         
-        return x_class.flatten(), x_recons
+        return x_class.flatten(), x_latent, x_recons
 
     def test_performance(self, test_load, accept_lev = 0.5):
         self.train(False)
@@ -151,7 +151,7 @@ class ClassifierAutoEncoder(nn.Module):
         for batch_im, batch_lab, _ in test_load:
             batch_im, batch_lab = batch_im.to(device), batch_lab.to(device)
             with torch.no_grad():
-                pred_lab, recons = self(batch_im)
+                pred_lab, _, recons = self(batch_im)
                 # To compute test accuracy from classifier part
                 count_correct += ((pred_lab >= accept_lev) == batch_lab).sum().item()
                 total_count += batch_lab.shape[0]
