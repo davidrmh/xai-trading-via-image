@@ -155,9 +155,9 @@ class ClassifierAutoEncoder(nn.Module):
                 # To compute test accuracy from classifier part
                 count_correct += ((pred_lab >= accept_lev) == batch_lab).sum().item()
                 total_count += batch_lab.shape[0]
-                
                 # Compute reconstruction loss
                 recons_loss = recons_loss + loss_metric(recons batch_im).item()
         test_accuracy = count_correct / total_count
+        test_mse = recons_loss / total_count
         self.train(True)
-        return test_accuracy
+        return test_accuracy, test_mse
