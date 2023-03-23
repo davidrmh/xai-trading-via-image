@@ -1,5 +1,6 @@
 '''
-RECONSTRUCTION DOMINATES PREDICTION
+Using the penalization term given by
+penalize_separated function enters in conflict with the classifier.
 '''
 import os
 import json
@@ -83,6 +84,8 @@ def main(config) -> None:
         test_load = DataLoader(test_ds, batch_size = batch_size, shuffle = False)
         
         count_stop = 0
+        bool_train_recons = False
+        bool_train_class = True
         prev_test_accuracy = 0.0
         test_accuracy = 0.0
         prev_test_recons = torch.inf
@@ -102,9 +105,18 @@ def main(config) -> None:
                 # Predictions
                 pred_lab, batch_latent, batch_recons = model(batch_im)
 
-                # Loss
-                loss_separated = penalize_separated(batch_latent, batch_lab)
-                loss = loss_metric_classif(pred_lab, batch_lab) + loss_metric_recons(batch_recons, batch_im) + loss_separated * 0.001
+                # Batch-alternated losses
+                if bool_train_class:
+                    loss = loss_metric_classif(pred_lab, batch_lab)
+                    bool_train_class = False
+                    bool_train_recons = True
+                elif bool_train_recons:
+                    loss = loss_metric_recons(batch_recons, batch_im)
+                    bool_train_class = True
+                    bool_train_recons = False
+                #loss_separated = penalize_separated(batch_latent, batch_lab) # NOT WORKING FOR CLASSIFICATION
+                #loss = loss_metric_classif(pred_lab, batch_lab) + loss_metric_recons(batch_recons, batch_im)
+                
 
                 # Backpropagation
                 loss.backward()
@@ -119,16 +131,16 @@ def main(config) -> None:
                     
             test_accuracy, test_recons = model.test_performance(test_load, accept_lev)
             if test_accuracy > prev_test_accuracy or test_recons < prev_test_recons:
-                if test_accuracy > prev_test_accuracy:
-                    print(f' {"=" * 25}>> Improvement in Accuracy \n')
-                if test_recons < prev_test_recons:
-                    print(f' {"=" * 25}>> Improvement in Reconstruction \n')
                 print(f' {"@"*20} Improvement in test metrics from. Saving model {"@"*20} \n')
                 print(f' {"@"*20} Previous Best Test Accuracy: {prev_test_accuracy:.4f}. Current Test Accuracy {test_accuracy:.4f} \n')
                 print(f' {"@"*20} Previous Best Test MSE: {prev_test_recons:.7f}. Current Test MSE {test_recons:.7f} \n')
                 torch.save(model.state_dict(), chk_name)
-                prev_test_accuracy = test_accuracy
-                prev_test_recons = test_recons
+                if test_accuracy > prev_test_accuracy:
+                    print(f' {"=" * 25}>> Improvement in Accuracy \n')
+                    prev_test_accuracy = test_accuracy
+                if test_recons < prev_test_recons:
+                    print(f' {"=" * 25}>> Improvement in Reconstruction \n')
+                    prev_test_recons = test_recons
                 count_stop = 0
             else:
                 count_stop = count_stop + 1
