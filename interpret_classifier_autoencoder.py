@@ -45,7 +45,7 @@ num_query = 2
 bool_type = False
 
 # Number of neighbors to compare with (neighbors come from training data)
-num_neighbors = 5
+num_neighbors = 6
 
 # Output Figure size
 figsize = (10, 10)
@@ -77,7 +77,7 @@ alpha = 0.4
 out_path = './70_by_70_sd_maps_classif_autoencoder_correct_training'
 
 # name of the file with the output
-out_file = 'sd_map31_wrong'
+out_file = 'sd_map2_wrong'
 
 # For reproducibility
 seed = 20
@@ -198,7 +198,9 @@ def get_sd_map(img_neighbor: torch.Tensor,
     
     # Saliency Maps
     sim_map = torch.zeros_like(img_neighbor)
+    sim_map_focused = torch.zeros_like(img_neighbor)
     dis_map = torch.zeros_like(img_neighbor)
+    dis_map_focused = torch.zeros_like(img_neighbor)
     
     # Similarity map
     for i, e in enumerate(sim_regions):
@@ -207,23 +209,24 @@ def get_sd_map(img_neighbor: torch.Tensor,
         start_col = e[1][0]
         end_col = e[1][1]
         
-        # aux is used to only consider part of img_neighbor that is not background
+        # aux_focused is used to only consider part of img_neighbor that is not background
         img_neighbor_region = img_neighbor[:, start_row:end_row, start_col:end_col]
-        #aux = torch.zeros_like(img_neighbor_region)
-        #aux[img_neighbor_region > 0] = 1.0
-        aux = torch.ones_like(img_neighbor_region) # To use the unfocused version
+        aux_focused = torch.zeros_like(img_neighbor_region)
+        aux_focused[img_neighbor_region > 0] = 1.0
+        aux = torch.ones_like(img_neighbor_region) # To obtain the unfocused version (the one that is plotted)
         
         # Factor to consider overlapping masks
         # factor = np.exp(- factor_f[start_row:end_row, start_col:end_col] / factor_f[start_row:end_row, start_col:end_col].max())
         factor = 1 / factor_f[start_row:end_row, start_col:end_col]
         factor = factor.reshape((1, *factor.shape))
         sim_map[:, start_row:end_row, start_col:end_col] = sim_contrib[i] * factor * aux + sim_map[:, start_row:end_row, start_col:end_col]
+        sim_map_focused[:, start_row:end_row, start_col:end_col] = sim_contrib[i] * factor * aux_focused + sim_map_focused[:, start_row:end_row, start_col:end_col]
         
-    #sim_map[0][sim_map[0] > 0] = 1
-    #sim_map[1][sim_map[1] > 0] = 1
-    #sim_map[2] = 0
     sim_map = sim_map.permute([1,2,0]).numpy()
     sim_map = sim_map.mean(axis = 2) # To use Colormaps the shape must be (H, W)
+    sim_map_focused = sim_map_focused.permute([1,2,0]).numpy()
+    sim_map_focused = sim_map_focused.mean(axis = 2)
+
     
 
     # Dissimilarity map
@@ -235,23 +238,23 @@ def get_sd_map(img_neighbor: torch.Tensor,
         
         # aux is used to only consider part of img_neighbor that is not background
         img_neighbor_region = img_neighbor[:, start_row:end_row, start_col:end_col]
-        #aux = torch.zeros_like(img_neighbor_region)
-        #aux[img_neighbor_region > 0] = 1.0
-        aux = torch.ones_like(img_neighbor_region) # To use the unfocused version
+        aux_focused = torch.zeros_like(img_neighbor_region)
+        aux_focused[img_neighbor_region > 0] = 1.0
+        aux = torch.ones_like(img_neighbor_region) # To obtain the unfocused version (the one that is plotted)
         
         # Factor to consider overlapping masks
         # factor = np.exp(- factor_f[start_row:end_row, start_col:end_col] / factor_f[start_row:end_row, start_col:end_col].max())
         factor = 1 / factor_f[start_row:end_row, start_col:end_col]
         factor = factor.reshape((1, *factor.shape))
         dis_map[:, start_row:end_row, start_col:end_col] = dis_contrib[i] * factor * aux + dis_map[:, start_row:end_row, start_col:end_col]
+        dis_map_focused[:, start_row:end_row, start_col:end_col] = dis_contrib[i] * factor * aux_focused + dis_map_focused[:, start_row:end_row, start_col:end_col]
         
-    #dis_map[0][dis_map[0] > 0] = 1
-    #dis_map[1][dis_map[1] > 0] = 1
-    #dis_map[2] = 0
     dis_map = dis_map.permute([1,2,0]).numpy()
     dis_map = dis_map.mean(axis = 2) # To use Colormaps the shape must be (H, W)
+    dis_map_focused = dis_map_focused.permute([1,2,0]).numpy()
+    dis_map_focused = dis_map_focused.mean(axis = 2)
     
-    return sim_map, dis_map
+    return sim_map, dis_map, sim_map_focused, dis_map_focused
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -376,16 +379,16 @@ for idx in query_idx:
         unmask_dist = np.sqrt(sum((latent_query - latent_neighbor)**2))
         
         # Compute S/D Maps
-        sim_map, dis_map = get_sd_map(img_neighbor,
-                                     latent_query,
-                                     unmask_dist,
-                                     mask_size,
-                                     stride,
-                                     model,
-                                     pca,
-                                     scaler)
-        avg_indiv_sim = sim_map[sim_map > 0].mean()
-        avg_indiv_dis = dis_map[dis_map > 0].mean()
+        sim_map, dis_map, sim_map_focused, dis_map_focused = get_sd_map(img_neighbor,
+                                                                        latent_query,
+                                                                        unmask_dist,
+                                                                        mask_size,
+                                                                        stride,
+                                                                        model,
+                                                                        pca,
+                                                                        scaler)
+        avg_indiv_sim = sim_map_focused[sim_map_focused > 0].mean()
+        avg_indiv_dis = dis_map_focused[dis_map_focused > 0].mean()
         # Store in corresponding lists in order to compute the
         # overall level of (dis)agreement.
         if pred_query == pred_neighbor:
