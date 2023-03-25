@@ -42,7 +42,7 @@ path_scaler = './70_by_70_pca_classif_autoencoder/scaler_BB_Buy_classif.pkl'
 num_query = 2
 
 # Type of prediction (True => right prediction, False => Wrong prediction)
-bool_type = False
+bool_type = True
 
 # Number of neighbors to compare with (neighbors come from training data)
 num_neighbors = 5
@@ -74,13 +74,13 @@ dis_col_map = 'Reds'
 alpha = 0.4
 
 # Path where to store the results
-out_path = './70_by_70_sd_maps_classif_autoencoder'
+out_path = './70_by_70_sd_maps_classif_autoencoder_correct_training'
 
 # name of the file with the output
-out_file = 'sd_map4721'
+out_file = 'sd_map4'
 
 # For reproducibility
-seed = 4721
+seed = 4
 # ---------------------END OF CONFIG FILE ------------------------
 
 
@@ -94,9 +94,9 @@ def overall_level(list_maps: list) -> float:
         sum_map = m + sum_map
     
     # Normalize to [0, 1]
-    sum_map /= sum_map.max()
+    #sum_map /= sum_map.max()
     
-    return sum_map[sum_map > 0].mean()
+    return sum_map[sum_map > 0].mean() / len(list_maps)
 
 def mask_image(source_img: torch.Tensor, mask_size: int, stride: int):
 
