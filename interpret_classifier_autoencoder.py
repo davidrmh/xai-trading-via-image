@@ -45,10 +45,10 @@ num_query = 2
 bool_type = False
 
 # Number of neighbors to compare with (neighbors come from training data)
-num_neighbors = 6
+num_neighbors = 5
 
 # Output Figure size
-figsize = (10, 10)
+figsize = (12, 12)
 
 # DPI
 dpi = 300
@@ -77,7 +77,7 @@ alpha = 0.4
 out_path = './70_by_70_sd_maps_classif_autoencoder_correct_training'
 
 # name of the file with the output
-out_file = 'sd_map2_wrong'
+out_file = 'sd_map1_wrong'
 
 # For reproducibility
 seed = 20
@@ -463,7 +463,7 @@ for idx in query_idx:
     axs[i + 1, 0].set_yticks([])
     
     i = i + 2
-#fig.tight_layout()
+fig.tight_layout()
 plt.subplots_adjust(wspace=0.1)
 plt.savefig(os.path.join(out_path, f'{out_file}.png'),
            backend = 'Agg',
