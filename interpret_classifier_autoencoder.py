@@ -42,7 +42,7 @@ path_scaler = './70_by_70_pca_classif_autoencoder/scaler_BB_Buy_classif.pkl'
 num_query = 2
 
 # Type of prediction (True => right prediction, False => Wrong prediction)
-bool_type = True
+bool_type = False
 
 # Number of neighbors to compare with (neighbors come from training data)
 num_neighbors = 5
@@ -77,26 +77,21 @@ alpha = 0.4
 out_path = './70_by_70_sd_maps_classif_autoencoder_correct_training'
 
 # name of the file with the output
-out_file = 'sd_map4'
+out_file = 'sd_map31_wrong'
 
 # For reproducibility
-seed = 4
+seed = 20
 # ---------------------END OF CONFIG FILE ------------------------
 
 
-def overall_level(list_maps: list) -> float:
-    if len(list_maps) == 0:
+def overall_level(avg_sim: list[float], avg_dis: list[float]) -> float:
+    if len(avg_sim) == 0:
         return 0.0
-    sum_map = np.zeros_like(list_maps[0])
-    
-    # Aggregate (dis)similarity maps
-    for m in list_maps:
-        sum_map = m + sum_map
-    
-    # Normalize to [0, 1]
-    #sum_map /= sum_map.max()
-    
-    return sum_map[sum_map > 0].mean() / len(list_maps)
+    overall_lev = 0.0
+    for i in range(len(avg_sim)):
+        overall_lev += avg_sim[i] - avg_dis[i]
+    overall_lev /= len(avg_sim)
+    return overall_lev
 
 def mask_image(source_img: torch.Tensor, mask_size: int, stride: int):
 
@@ -389,24 +384,24 @@ for idx in query_idx:
                                      model,
                                      pca,
                                      scaler)
-        
+        avg_indiv_sim = sim_map[sim_map > 0].mean()
+        avg_indiv_dis = dis_map[dis_map > 0].mean()
         # Store in corresponding lists in order to compute the
         # overall level of (dis)agreement.
-        # Copy is needed since later the maps are modified
         if pred_query == pred_neighbor:
-            list_sim_same.append(cp.deepcopy(sim_map))
-            list_dis_same.append(cp.deepcopy(dis_map))
+            list_sim_same.append(avg_indiv_sim)
+            list_dis_same.append(avg_indiv_dis)
         else:
-            list_sim_dif.append(cp.deepcopy(sim_map))
-            list_dis_dif.append(cp.deepcopy(dis_map))
+            list_sim_dif.append(avg_indiv_sim)
+            list_dis_dif.append(avg_indiv_dis)
         
         # Make plots for neighbors
         sim_map = torch.from_numpy(sim_map)
-        sim_agg += sim_map
+        #sim_agg += sim_map
         sim_map[sim_map == 0.0] = torch.nan
         
         dis_map = torch.from_numpy(dis_map)
-        dis_agg += dis_map
+        #dis_agg += dis_map
         dis_map[dis_map == 0.0] = torch.nan
 
         # Plot neighbor image with similarity map
@@ -415,24 +410,27 @@ for idx in query_idx:
         img_neighbor[img_neighbor == 0.0] = torch.nan
         axs[i, j + 1].imshow(img_neighbor, cmap = 'PiYG_r')
         axs[i, j + 1].imshow(sim_map, cmap = cmap_sim, alpha = alpha)
-        axs[i, j + 1].set_title(f'Pred: {pred_neighbor}\n True: {true_neighbor}', fontsize=5)
+        axs[i, j + 1].set_title(f'Pred: {pred_neighbor}\n True: {true_neighbor}', fontsize = 6)
+        axs[i, j + 1].set_xlabel(f'Avg. Sim: {avg_indiv_sim:.4f}', fontsize = 6)
         axs[i, j + 1].set_xticks([])
         axs[i, j + 1].set_yticks([])
         
         # Plot neighbor image with dissimilarity map
         axs[i + 1, j + 1].imshow(img_neighbor, cmap = 'PiYG_r')
         axs[i + 1, j + 1].imshow(dis_map, cmap = cmap_dis, alpha = alpha)
-        axs[i + 1, j + 1].set_title(f'Pred: {pred_neighbor}\n True: {true_neighbor}', fontsize=5)
+        axs[i + 1, j + 1].set_title(f'Pred: {pred_neighbor}\n True: {true_neighbor}', fontsize = 6)
+        axs[i + 1, j + 1].set_xlabel(f'Avg. Dis: {avg_indiv_dis:.4f}', fontsize = 6)
         axs[i + 1, j + 1].set_xticks([])
         axs[i + 1, j + 1].set_yticks([])
     
     # Compute overall level of (dis)agreement
-    ola_same = overall_level(list_sim_same)
-    old_same = overall_level(list_dis_same)
-    ola_dif = overall_level(list_sim_dif)
-    old_dif = overall_level(list_dis_dif)
-    total_ola = ola_same + ola_dif
-    total_old = old_same + old_dif
+    ola_same = overall_level(list_sim_same, list_dis_same)
+    ola_dif = overall_level(list_sim_dif, list_dis_dif)
+    #old_same = overall_level(list_dis_same)
+    #ola_dif = overall_level(list_sim_dif)
+    #old_dif = overall_level(list_dis_dif)
+    #total_ola = ola_same + ola_dif
+    #total_old = old_same + old_dif
     
     # Plot query image with aggregated similarity maps
     #sim_agg /= sim_agg.max()
@@ -444,8 +442,8 @@ for idx in query_idx:
     #axs[i, 0].imshow(sim_agg / num_neighbors, alpha = alpha, cmap = cmap_sim,
     #                vmin = np.nanmin(sim_agg / num_neighbors),
     #                vmax = np.nanmax(sim_agg / num_neighbors))
-    axs[i, 0].set_title(f'Pred: {pred_query}\n True: {true_query}', fontsize=5)
-    axs[i, 0].set_xlabel(f'OLA_D:{ola_dif:.4f}\n OLA_S: {ola_same:.4f}\n Tot. OLA {total_ola:.4f}', fontsize=5)
+    axs[i, 0].set_title(f'Pred: {pred_query}\n True: {true_query}', fontsize = 6)
+    axs[i, 0].set_xlabel(f'Ag_Same: {ola_same:.4f}\n Ag_Dif: {ola_dif:.4f}', fontsize = 6)
     axs[i, 0].set_xticks([])
     axs[i, 0].set_yticks([])
     
@@ -457,12 +455,12 @@ for idx in query_idx:
     #                    vmin = np.nanmin(dis_agg / num_neighbors),
     #                    vmax = np.nanmin(dis_agg / num_neighbors))
     axs[i + 1, 0].set_title(f'Pred: {pred_query}\n True: {true_query}', fontsize = 5)
-    axs[i + 1, 0].set_xlabel(f'OLD_D: {old_dif:.4f} \n OLD_S: {old_same:.4f}\n Tot. OLD {total_old:.4f}', fontsize = 5)
+    #axs[i + 1, 0].set_xlabel(f'OLD_D: {old_dif:.4f} \n OLD_S: {old_same:.4f}\n Tot. OLD {total_old:.4f}', fontsize = 5)
     axs[i + 1, 0].set_xticks([])
     axs[i + 1, 0].set_yticks([])
     
     i = i + 2
-fig.tight_layout()
+#fig.tight_layout()
 plt.subplots_adjust(wspace=0.1)
 plt.savefig(os.path.join(out_path, f'{out_file}.png'),
            backend = 'Agg',
