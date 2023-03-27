@@ -163,7 +163,7 @@ def get_sd_map(img_neighbor: torch.Tensor,
                unmask_dist: float,
                mask_size: int,
                stride: int,
-               model: ClassifierAutoEncoder) -> (torch.Tensor, torch.Tensor):
+               model: ClassifierAutoEncoder):
     
     # Make masked images
     masked_image, factor_f, idx_mask = mask_image(img_neighbor, mask_size, stride)
