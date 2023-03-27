@@ -1,7 +1,6 @@
 import os
 import pickle
 import torch
-import sklearn
 import copy as cp
 import numpy as np
 import pandas as pd
@@ -17,20 +16,20 @@ from sklearn.neighbors import NearestNeighbors
 # ----------------------- CONFIG FILE -------------------------------------
 
 # File containing the predictions from a classifier over the training set
-train_pred_file = "./70_by_70_pred_classif_autoencoder_images_2010_2017/pred_BB_Buy_classif.csv"
+train_pred_file = "./70_by_70_pred_classif_autoencoder_images_2010_2017/pred_MACD_Buy_classif.csv"
 
 # File containing the predictions from a classifier over the test set
-test_pred_file = "./70_by_70_pred_classif_autoencoder_images_2010_2017/pred_BB_Buy_classif.csv"
+test_pred_file = "./70_by_70_pred_classif_autoencoder_images_2010_2017/pred_MACD_Buy_classif.csv"
 
 # File containing the latent representations of the images in the train set
-train_lat_file = "./70_by_70_latent_classif_autoencoder/train_latent_BB_Buy_classif.pkl"
+train_lat_file = "./70_by_70_latent_classif_autoencoder/train_latent_MACD_Buy_classif.pkl"
 
 # File containing the latent representations of the images in the test set
 # Ues the train set to analyze the decisions over the trained data
-test_lat_file = "./70_by_70_latent_classif_autoencoder/train_latent_BB_Buy_classif.pkl"
+test_lat_file = "./70_by_70_latent_classif_autoencoder/train_latent_MACD_Buy_classif.pkl"
 
 # File containing the path of a trained autoencoder
-path_autoencoder = './70_by_70_trained_classif_autoencoder/BB_Buy_classif.pth'
+path_autoencoder = './70_by_70_trained_classif_autoencoder/MACD_Buy_classif.pth'
 
 # Number of query predictions from the test set to analyze
 num_query = 2
@@ -68,7 +67,7 @@ dis_col_map = 'Reds'
 alpha = 0.4
 
 # Path where to store the results
-out_path = './70_by_70_sd_maps_latent_classif_autoencoder_training'
+out_path = './70_by_70_sd_maps_latent_MACD_classif_autoencoder_training'
 
 # name of the file with the output
 out_file = 'sd_map5_wrong'
