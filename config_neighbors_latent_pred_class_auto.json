@@ -1,0 +1,31 @@
+{
+    "path_train_images": [["./70_by_70_images_2010_2017/BB_Buy", "./70_by_70_images_2010_2017/no_BB_Buy"],
+                    ["./70_by_70_images_2010_2017/MACD_Buy", "./70_by_70_images_2010_2017/no_MACD_Buy"],
+                    ["./70_by_70_images_2010_2017/RSI_Buy", "./70_by_70_images_2010_2017/no_RSI_Buy"]],
+    
+    "path_test_images": [["./70_by_70_images_2018/BB_Buy", "./70_by_70_images_2018/no_BB_Buy"],
+                    ["./70_by_70_images_2018/MACD_Buy", "./70_by_70_images_2018/no_MACD_Buy"],
+                    ["./70_by_70_images_2018/RSI_Buy", "./70_by_70_images_2018/no_RSI_Buy"]],
+
+    "train_lat_file": ["./70_by_70_latent_classif_autoencoder/train_latent_BB_Buy_classif.pkl",
+    "./70_by_70_latent_classif_autoencoder/train_latent_MACD_Buy_classif.pkl",
+    "./70_by_70_latent_classif_autoencoder/train_latent_RSI_Buy_classif.pkl"],
+
+    "test_lat_file": ["./70_by_70_latent_classif_autoencoder/test_latent_BB_Buy_classif.pkl",
+    "./70_by_70_latent_classif_autoencoder/test_latent_MACD_Buy_classif.pkl",
+    "./70_by_70_latent_classif_autoencoder/test_latent_RSI_Buy_classif.pkl"],
+
+    "path_autoencoder": ["./70_by_70_trained_classif_autoencoder/BB_Buy_classif.pth",
+    "./70_by_70_trained_classif_autoencoder/MACD_Buy_classif.pth",
+    "./70_by_70_trained_classif_autoencoder/RSI_Buy_classif.pth"],
+
+    "num_neighbors": 5,
+    
+    "image_size": [70, 70],
+
+    "mask_size": 8,
+
+    "stride": 4,
+
+    "out_path": "./70_by_70_neighbors_latent_pred_images_2018"
+}
