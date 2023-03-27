@@ -41,29 +41,38 @@ def apply_rules(train_labels: np.ndarray,
     # If neighbors have positive label
     # and the average similarity is greater than the average disimilarity
     # then predict the positive label
-    if np.all(train_labels[idx_neighbors] == 1) and overall_sim_pos_class > 0:
-        return 1
+    #if np.all(train_labels[idx_neighbors] == 1) and overall_sim_pos_class > 0:
+    #    return 1
     
     # If neighbors have positive label
     # but in average there the disimilarity level is greater than the similarity
     # then predict the negative label
-    elif np.all(train_labels[idx_neighbors] == 1) and overall_sim_pos_class < 0:
-        return 0
+    #elif np.all(train_labels[idx_neighbors] == 1) and overall_sim_pos_class < 0:
+    #    return 0
     
     # Similar logic as above
-    elif np.all(train_labels[idx_neighbors] == 0) and overall_sim_neg_class > 0:
-        return 0
+    #elif np.all(train_labels[idx_neighbors] == 0) and overall_sim_neg_class > 0:
+    #    return 0
     
     # Similar logic as above
-    elif np.all(train_labels[idx_neighbors] == 0) and overall_sim_neg_class < 0:
-        return 1
+    #elif np.all(train_labels[idx_neighbors] == 0) and overall_sim_neg_class < 0:
+    #    return 1
     
     # If neighbors have mixed labels then consider the label of the most similar group
+    #else:
+    #    if overall_sim_pos_class > overall_sim_neg_class:
+    #        return 1
+    #    else:
+    #        return 0
+
+    if np.all(train_labels[idx_neighbors] == 1):
+        return 1
+    elif np.all(train_labels[idx_neighbors] == 0):
+        return 0
+    elif overall_sim_pos_class > overall_sim_neg_class:
+        return 1
     else:
-        if overall_sim_pos_class > overall_sim_neg_class:
-            return 1
-        else:
-            return 0
+        return 0
 
 def main(config: dict):
 
