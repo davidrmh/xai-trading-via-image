@@ -1,0 +1,43 @@
+{
+    "train_pred_file": "./70_by_70_pred_classif_autoencoder_images_2010_2017/pred_MACD_Buy_classif.csv",
+
+    "test_pred_file": "./70_by_70_pred_classif_autoencoder_images_2010_2017/pred_MACD_Buy_classif.csv",
+
+    "train_lat_file": "./70_by_70_latent_classif_autoencoder/train_latent_MACD_Buy_classif.pkl",
+
+    "test_lat_file": "./70_by_70_latent_classif_autoencoder/train_latent_MACD_Buy_classif.pkl",
+
+    "path_autoencoder": "./70_by_70_trained_classif_autoencoder/MACD_Buy_classif.pth",
+
+    "num_query": 2,
+
+    "bool_type": "False",
+
+    "num_neighbors": 5,
+
+    "figsize": [12, 12],
+
+    "dpi": 300,
+
+    "input_image_size": [70, 70],
+
+    "mask_size": 8,
+
+    "stride": 4,
+
+    "lab_pos": "Buy",
+
+    "lab_neg": "No Buy",
+
+    "sim_col_map": "Greens",
+
+    "dis_col_map": "Reds",
+
+    "alpha": 0.4,
+
+    "out_path": "./70_by_70_sd_maps_latent_MACD_classif_autoencoder_training",
+
+    "out_file": "sd_map5_test",
+
+    "seed": 20
+}
