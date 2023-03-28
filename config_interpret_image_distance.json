@@ -1,0 +1,35 @@
+{
+    "train_pred_file": "./70_by_70_pred_classif_autoencoder_images_2010_2017/pred_BB_Buy_classif.csv",
+
+    "test_pred_file": "./70_by_70_pred_classif_autoencoder_images_2010_2017/pred_BB_Buy_classif.csv",
+
+    "num_query": 2,
+
+    "bool_type": "False",
+
+    "num_neighbors": 5,
+
+    "figsize": [12, 12],
+
+    "dpi": 300,
+
+    "mask_size": 8,
+
+    "stride": 4,
+
+    "lab_pos": "Buy",
+
+    "lab_neg": "No Buy",
+
+    "sim_col_map": "Greens",
+
+    "dis_col_map": "Reds",
+
+    "alpha": 0.4,
+
+    "out_path": "./70_by_70_sd_maps_BB_image_distance",
+
+    "out_file": "sd_map1",
+
+    "seed": 20
+}
