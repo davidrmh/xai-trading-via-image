@@ -70,12 +70,12 @@ def get_regions(unmask_dist: float,
         # with respect the query image
         if d <= unmask_dist:
             sim_regions.append(idx_mask[i])
-            sim_contrib.append(d - unmask_dist)
+            sim_contrib.append(unmask_dist - d)
         
         # Dissimilarity region
         else:
             dis_regions.append(idx_mask[i])
-            dis_contrib.append(unmask_dist - d)
+            dis_contrib.append(d - unmask_dist)
     
     # Compute contributions
     if len(sim_contrib) > 0:
