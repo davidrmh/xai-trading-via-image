@@ -210,6 +210,10 @@ def main(config: dict):
     
     # name of the file with the output
     out_file = config['out_file']
+    if bool_type:
+        out_file = f'{out_file}_right'
+    else:
+        out_file = f'{out_file}_wrong'
     
     # For reproducibility
     seed = config['seed']
@@ -239,6 +243,9 @@ def main(config: dict):
 
     i = 0
     for idx in query_idx:
+        # For debbuging
+        print(f' {"=" * 20} Query image {idx} {"=" * 20}')
+        
         # Get query image from test set
         path_img_query = df_test_pred.iloc[idx, 0]
         img_query = image2tensor(path_img_query)
@@ -274,12 +281,7 @@ def main(config: dict):
 
         # To store overall level of (dis)agreement
         ola_same = 0.0 # Overall level of agreement for neighbors with same predicted label as query image
-        old_same = 0.0 # Overall level of disagreement for neighbors with same predicted label as query image
         ola_dif = 0.0 # Overall level of agreement for neighbors with different predicted label as query image
-        old_dif = 0.0 # Overall level of disagreement for neighbors with different predicted label as query image
-
-        # For debbuging
-        print(f' {"=" * 20} Query image {idx} {"=" * 20}')
 
         # Plot row
         for j, idx_n in enumerate(idx_neighbors):
@@ -320,7 +322,7 @@ def main(config: dict):
             img_neighbor = img_neighbor.permute([1, 2, 0])
             img_neighbor = img_neighbor.mean(axis = 2)
             img_neighbor[img_neighbor == 0.0] = torch.nan
-            axs[i, j + 1].imshow(img_neighbor, cmap = 'PiYG_r')
+            axs[i, j + 1].imshow(img_neighbor, cmap = 'RdYlGn_r')
             axs[i, j + 1].imshow(sim_map, cmap = cmap_sim, alpha = alpha)
             axs[i, j + 1].set_title(f'Pred: {pred_neighbor}\n True: {true_neighbor}', fontsize = 6)
             axs[i, j + 1].set_xlabel(f'Avg. Sim: {avg_indiv_sim:.4f}', fontsize = 6)
@@ -328,7 +330,7 @@ def main(config: dict):
             axs[i, j + 1].set_yticks([])
 
             # Plot neighbor image with dissimilarity map
-            axs[i + 1, j + 1].imshow(img_neighbor, cmap = 'PiYG_r')
+            axs[i + 1, j + 1].imshow(img_neighbor, cmap = 'RdYlGn_r')
             axs[i + 1, j + 1].imshow(dis_map, cmap = cmap_dis, alpha = alpha)
             axs[i + 1, j + 1].set_title(f'Pred: {pred_neighbor}\n True: {true_neighbor}', fontsize = 6)
             axs[i + 1, j + 1].set_xlabel(f'Avg. Dis: {avg_indiv_dis:.4f}', fontsize = 6)
@@ -343,14 +345,14 @@ def main(config: dict):
         img_query = img_query.permute([1, 2, 0])
         img_query = img_query.mean(axis = 2)
         img_query[img_query == 0.0] = torch.nan
-        axs[i, 0].imshow(img_query, cmap = 'PiYG_r')
+        axs[i, 0].imshow(img_query, cmap = 'RdYlGn_r')
         axs[i, 0].set_title(f'Pred: {pred_query}\n True: {true_query}', fontsize = 6)
         axs[i, 0].set_xlabel(f'Ag_Same: {ola_same:.4f}\n Ag_Dif: {ola_dif:.4f}', fontsize = 6)
         axs[i, 0].set_xticks([])
         axs[i, 0].set_yticks([])
 
         # Plot query image with aggregated dissimilarity maps
-        axs[i + 1, 0].imshow(img_query, cmap = 'PiYG_r')
+        axs[i + 1, 0].imshow(img_query, cmap = 'RdYlGn_r')
         axs[i + 1, 0].set_title(f'Pred: {pred_query}\n True: {true_query}', fontsize = 5)
         axs[i + 1, 0].set_xticks([])
         axs[i + 1, 0].set_yticks([])
