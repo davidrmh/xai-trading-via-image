@@ -1,0 +1,15 @@
+{
+    "path_train_images": [["./70_by_70_images_2010_2017/BB_Buy", "./70_by_70_images_2010_2017/no_BB_Buy"]],
+    
+    "path_test_images": [["./70_by_70_images_2018/BB_Buy", "./70_by_70_images_2018/no_BB_Buy"]],
+
+    "num_neighbors": 5,
+
+    "mask_size": 8,
+
+    "stride": 4,
+
+    "type_rule": 2,
+
+    "out_path": "./70_by_70_neighbors_image_classif_2018"
+}
