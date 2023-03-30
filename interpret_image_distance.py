@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import sewar.full_ref as sw
 import matplotlib.pyplot as plt
+from multiprocessing import Pool
 from utils import image2tensor, set_seed
 
 
@@ -81,12 +82,14 @@ def get_regions(unmask_dist: float,
     if len(sim_contrib) > 0:
         sim_contrib = np.array(sim_contrib)
         range_sim = sim_contrib.max() - sim_contrib.min()
-        sim_contrib = (sim_contrib - sim_contrib.min()) / range_sim
+        if range_sim > 0:
+            sim_contrib = (sim_contrib - sim_contrib.min()) / range_sim
 
     if len(dis_contrib) > 0:
         dis_contrib = np.array(dis_contrib)
         range_dis = dis_contrib.max() - dis_contrib.min()
-        dis_contrib = (dis_contrib - dis_contrib.min()) / range_dis
+        if range_dis > 0:
+            dis_contrib = (dis_contrib - dis_contrib.min()) / range_dis
     
     return sim_regions, sim_contrib, dis_regions, dis_contrib
 
@@ -240,7 +243,8 @@ def main(config: dict):
     # Create output directory
     if not os.path.exists(out_path):
         os.mkdir(out_path)
-
+        
+    #pool = Pool(processes = 6)
     i = 0
     for idx in query_idx:
         # For debbuging
@@ -252,6 +256,7 @@ def main(config: dict):
         pred_query = lab_pos if df_test_pred.iloc[idx]['prediction'] == 1 else lab_neg
         true_query = lab_pos if df_test_pred.iloc[idx]['truth'] == 1 else lab_neg
         
+        # TO DO: ADD PARALLELIZE
         distance_neighbors = np.zeros(df_train_pred.shape[0])
         for k, file in enumerate(df_train_pred['file']):
             img_neighbor = image2tensor(file).permute([1, 2, 0]).numpy()
