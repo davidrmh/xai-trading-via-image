@@ -167,13 +167,25 @@ def main(config: dict):
                                                                                 stride)
                 # Positive class
                 if train_labels[idx] == 1:
-                    avg_sim_pos_class.append(sim_map_focused[sim_map_focused > 0].mean())
-                    avg_dis_pos_class.append(dis_map_focused[dis_map_focused > 0].mean())
+                    if len(sim_map_focused[sim_map_focused > 0]) == 0:
+                        avg_sim_pos_class.append(0)
+                    else:
+                        avg_sim_pos_class.append(sim_map_focused[sim_map_focused > 0].mean())
+                    if len(dis_map_focused[dis_map_focused > 0]) == 0:
+                        avg_dis_pos_class.append(0)
+                    else:
+                        avg_dis_pos_class.append(dis_map_focused[dis_map_focused > 0].mean())
                 # Negative class
                 elif train_labels[idx] == 0:
-                    avg_sim_neg_class.append(sim_map_focused[sim_map_focused > 0].mean())
-                    avg_dis_neg_class.append(dis_map_focused[dis_map_focused > 0].mean())
-                    
+                    if len(sim_map_focused[sim_map_focused > 0]) == 0:
+                        avg_sim_neg_class.append(0)
+                    else:
+                        avg_sim_neg_class.append(sim_map_focused[sim_map_focused > 0].mean())
+                    if len(dis_map_focused[dis_map_focused > 0]) == 0:
+                        avg_dis_neg_class.append(0)
+                    else:
+                        avg_dis_neg_class.append(dis_map_focused[dis_map_focused > 0].mean())
+
             overall_sim_pos_class = overall_level(avg_sim_pos_class, avg_dis_pos_class, num_neighbors)
             overall_sim_neg_class = overall_level(avg_sim_neg_class, avg_dis_neg_class, num_neighbors)
             
@@ -194,7 +206,7 @@ def main(config: dict):
         df_output = pd.DataFrame({'file': test_files,
                                  'prediction': pred_labels,
                                  'truth': test_labels,
-                                 'is_corrrect?': pred_labels == test_labels})
+                                 'is_correct?': pred_labels == test_labels})
 
         # Save File
         out_file = path_test_images[i][0].split('/')[-1] + f'_rule_{type_rule}.csv'
